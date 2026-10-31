@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dracula's Outfit Studio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cinzel, Playfair Display, Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Cinzel', 'serif'],
+            serif: ['Playfair Display', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            velvet: { 950: '#08060a', 900: '#110b15', 800: '#1b1122', 700: '#281833' },
+            gold: { 200: '#f9ebb2', 300: '#ebd17c', 400: '#d4af37', 500: '#b89225', 600: '#8f6f17' },
+            crimson: { 400: '#e12d4b', 500: '#b81d38', 600: '#9e1b32', 700: '#751123', 900: '#3c0711' }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #08060a;
+      color: #f1ebd8;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Damask Gothic Wallpaper Pattern Overlay */
+    .gothic-wallpaper {
+      background-color: #08060a;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(158, 27, 50, 0.16) 0%, transparent 55%),
+        radial-gradient(circle at 85% 40%, rgba(212, 175, 55, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 15% 75%, rgba(158, 27, 50, 0.12) 0%, transparent 50%),
+        repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.02) 0px, rgba(212, 175, 55, 0.02) 1px, transparent 1px, transparent 24px),
+        repeating-linear-gradient(-45deg, rgba(212, 175, 55, 0.02) 0px, rgba(212, 175, 55, 0.02) 1px, transparent 1px, transparent 24px);
+    }
+
+    /* Ornate Gothic Card Frame */
+    .gothic-card {
+      background: linear-gradient(160deg, rgba(27, 17, 34, 0.9) 0%, rgba(12, 8, 16, 0.96) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.28);
+      box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.85), inset 0 1px 0 0 rgba(249, 235, 178, 0.12);
+    }
+
+    /* Gilded Mirror Arch Frame */
+    .mirror-arch-frame {
+      background: radial-gradient(ellipse at 50% 35%, #1d1526 0%, #09060d 75%, #050307 100%);
+      border: 3px solid #d4af37;
+      box-shadow:
+        0 0 0 6px #160f1d,
+        0 0 0 8px rgba(212, 175, 55, 0.45),
+        0 25px 60px rgba(0, 0, 0, 0.95),
+        inset 0 0 50px rgba(0, 0, 0, 0.9);
+      border-top-left-radius: 180px;
+      border-top-right-radius: 180px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .text-gold-gradient {
+      background: linear-gradient(to right, #f9ebb2, #d4af37, #ebd17c, #b89225);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Drop zone highlight while dragging a file over it */
+    .dropzone.is-dragging {
+      border-color: #ebd17c;
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    /* Selected style card */
+    .style-card[aria-pressed="true"] {
+      border-color: #ebd17c;
+      box-shadow: 0 0 0 1px #ebd17c, 0 18px 40px -16px rgba(158, 27, 50, 0.55);
+    }
+    .style-card[aria-pressed="true"] .style-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .style-card[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body class="gothic-wallpaper min-h-screen flex flex-col selection:bg-crimson-600 selection:text-gold-200">
+
+  <!-- ===================================================================== -->
+  <!-- HEADER                                                                -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-40 border-b border-gold-400/25 bg-velvet-950/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <a href="#" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-crimson-700/40 border border-gold-400/60 flex items-center justify-center">
+          <span class="font-display font-bold text-gold-300 text-lg">D</span>
+        </div>
+        <div>
+          <span class="font-display text-sm sm:text-base font-bold tracking-wider text-gold-200 block leading-none">
+            DRACULA'S OUTFIT STUDIO
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-widest text-gold-400/80">
+            Photo &amp; style intake
+          </span>
+        </div>
+      </a>
+
+      <nav class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest">
+        <a href="#step-photo" id="pill-photo" class="px-3 py-1.5 rounded-full border border-gold-400/40 text-gold-200 hover:bg-gold-400/10 transition">1 · Photo</a>
+        <a href="#step-style" id="pill-style" class="px-3 py-1.5 rounded-full border border-gold-400/40 text-gold-200 hover:bg-gold-400/10 transition">2 · Style</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+
+    <!-- Intro -->
+    <div class="max-w-3xl mb-10">
+      <span class="font-mono text-[11px] uppercase tracking-[0.25em] text-crimson-400">Mirrors fail him. We don't.</span>
+      <h1 class="font-display text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.12] mt-2">
+        Show us <span class="text-gold-gradient">the Count</span>, then tell us his taste.
+      </h1>
+      <p class="font-serif text-lg text-stone-300 mt-4">
+        Upload one front-facing photo of Dracula and pick the fashion styles he loves.
+        That's all we need to start dressing him.
+      </p>
+    </div>
+
+    <div class="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-8 items-start">
+
+      <!-- =============================================================== -->
+      <!-- STEP 1 — FRONT PHOTO                                            -->
+      <!-- =============================================================== -->
+      <section id="step-photo" class="gothic-card rounded-2xl p-5 sm:p-7 lg:sticky lg:top-24 scroll-mt-24">
+        <div class="flex items-center justify-between gap-3 mb-5">
+          <div>
+            <span class="font-mono text-[11px] uppercase tracking-widest text-gold-400">Step 1</span>
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-white">Upload his front photo</h2>
+          </div>
+          <span id="photo-status" class="font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded bg-crimson-900/80 text-crimson-300 border border-crimson-400/40">
+            No reflection yet
+          </span>
+        </div>
+
+        <!-- Mirror frame: shows dropzone when empty, the photo when loaded -->
+        <div class="mirror-arch-frame mx-auto w-full max-w-[380px] p-3">
+          <div class="rounded-t-[168px] rounded-b-[14px] overflow-hidden">
+
+            <label id="dropzone" for="photo-input" class="dropzone flex flex-col items-center justify-center text-center gap-3 aspect-[3/4] cursor-pointer border-2 border-dashed border-gold-400/35 rounded-t-[168px] rounded-b-[14px] px-6 transition">
+              <svg viewBox="0 0 120 150" class="w-24 opacity-60" aria-hidden="true">
+                <ellipse cx="60" cy="38" rx="20" ry="25" fill="none" stroke="#d4af37" stroke-width="2" stroke-dasharray="4 4"/>
+                <path d="M40,68 L80,68 L104,80 Q112,84 112,96 L116,150 L4,150 L8,96 Q8,84 16,80 Z" fill="none" stroke="#d4af37" stroke-width="2" stroke-dasharray="4 4"/>
+              </svg>
+              <span class="font-display text-sm font-bold text-gold-200 uppercase tracking-wider">Drop a photo here</span>
+              <span class="text-xs text-stone-400">or tap to choose · JPG, PNG or WebP</span>
+            </label>
+
+            <img id="photo-preview" alt="Uploaded front photo of Dracula" class="hidden w-full aspect-[3/4] object-cover">
+          </div>
+        </div>
+
+        <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/*" class="sr-only">
+
+        <p id="photo-error" class="hidden mt-4 text-sm text-crimson-300 bg-crimson-900/40 border border-crimson-500/40 rounded-lg px-3 py-2" role="alert"></p>
+
+        <div id="photo-actions" class="hidden mt-5 flex flex-wrap items-center justify-center gap-2">
+          <span id="photo-name" class="w-full text-center font-mono text-[11px] text-stone-400 truncate"></span>
+          <label for="photo-input" class="cursor-pointer px-4 py-2 rounded-xl bg-velvet-800 hover:bg-velvet-700 text-gold-200 border border-gold-400/30 font-mono text-xs transition">
+            Replace photo
+          </label>
+          <button id="btn-remove-photo" type="button" class="px-4 py-2 rounded-xl bg-crimson-900/60 hover:bg-crimson-800/70 text-crimson-200 border border-crimson-400/40 font-mono text-xs transition">
+            Remove
+          </button>
+        </div>
+
+        <ul class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-stone-300">
+          <li class="rounded-lg bg-velvet-950/70 border border-gold-400/15 px-3 py-2"><span class="text-gold-300">Front-facing</span><br>Looking straight at the camera</li>
+          <li class="rounded-lg bg-velvet-950/70 border border-gold-400/15 px-3 py-2"><span class="text-gold-300">Head to waist</span><br>Shoulders fully in frame</li>
+          <li class="rounded-lg bg-velvet-950/70 border border-gold-400/15 px-3 py-2"><span class="text-gold-300">One person</span><br>Plain background is best</li>
+        </ul>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- STEP 2 — STYLE PREFERENCES                                      -->
+      <!-- =============================================================== -->
+      <section id="step-style" class="gothic-card rounded-2xl p-5 sm:p-7 scroll-mt-24">
+        <div class="flex items-center justify-between gap-3 mb-2">
+          <div>
+            <span class="font-mono text-[11px] uppercase tracking-widest text-gold-400">Step 2</span>
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-white">Pick the styles he likes</h2>
+          </div>
+          <span id="style-count" class="font-mono text-[11px] text-gold-300 shrink-0">0 / 3 chosen</span>
+        </div>
+        <p class="text-sm text-stone-400 mb-6">Choose up to three. Tap again to unselect.</p>
+
+        <div id="style-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+        <!-- Summary -->
+        <div class="mt-8 rounded-xl border border-gold-400/30 bg-velvet-950/80 p-4 sm:p-5">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-20 shrink-0 rounded-t-[32px] rounded-b-md overflow-hidden border border-gold-400/40 bg-velvet-900 flex items-center justify-center">
+              <img id="summary-thumb" alt="" class="hidden w-full h-full object-cover">
+              <span id="summary-thumb-empty" class="font-display text-gold-400/50 text-xl">?</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-display text-sm font-bold text-gold-200 uppercase tracking-wider">The Count's profile</div>
+              <div id="summary-text" class="text-sm text-stone-300 mt-1">Add a photo and at least one style.</div>
+              <div id="summary-tags" class="flex flex-wrap gap-1.5 mt-2"></div>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button id="btn-save" type="button" disabled class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 enabled:hover:from-gold-400 enabled:hover:to-gold-300 text-velvet-950 font-display font-bold text-xs uppercase tracking-wider shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
+              Save profile
+            </button>
+            <span id="save-note" class="font-mono text-[11px] text-stone-400"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-t border-gold-400/15 py-6 text-center font-mono text-[11px] text-stone-500">
+    Hack or Treat · Dracula's Personal Catalogue
+  </footer>
+
+  <script>
+    (function () {
+      const MAX_STYLES = 3;
+      const MAX_FILE_MB = 15;
+      const STORAGE_KEY = 'dracula-studio-profile';
+
+      const STYLES = [
+        {
+          id: 'victorian',
+          name: 'Victorian Revival',
+          note: 'High collars, ruffles and brocade, straight from the castle archive.',
+          pieces: ['Opera cape', 'Poet shirt', 'Lace jabot'],
+          colors: ['#141018', '#9e1b32', '#d4af37', '#f1e6d6'],
+        },
+        {
+          id: 'academia',
+          name: 'Dark Academia',
+          note: 'Tweed, knitwear and the faint smell of old library books.',
+          pieces: ['Tweed blazer', 'Sweater vest', 'Oxford shirt'],
+          colors: ['#3b2f2a', '#6b5440', '#2d3a2e', '#e8dcc8'],
+        },
+        {
+          id: 'quiet',
+          name: 'Quiet Luxury',
+          note: 'No logos, perfect fabric. Wealth that whispers after midnight.',
+          pieces: ['Cashmere overcoat', 'Merino turtleneck', 'Wool trousers'],
+          colors: ['#1f1b22', '#4b4e55', '#a89f91', '#e9e3d8'],
+        },
+        {
+          id: 'street',
+          name: 'Neo-Gothic Streetwear',
+          note: 'Leather, silver and oversized fits for nights in the city.',
+          pieces: ['Leather jacket', 'Graphic tee', 'Silver chains'],
+          colors: ['#07060a', '#2a2a30', '#c0c0c8', '#c1121f'],
+        },
+        {
+          id: 'maximal',
+          name: 'Romantic Maximalism',
+          note: 'Velvet, roses and bows. More is more, and more is still not enough.',
+          pieces: ['Velvet tailcoat', 'Jacquard waistcoat', 'Silk bow'],
+          colors: ['#2a0610', '#7a1426', '#5a189a', '#d4af37'],
+        },
+        {
+          id: 'minimal',
+          name: 'Minimal Monochrome',
+          note: 'One colour, clean lines and a silhouette that cuts the fog.',
+          pieces: ['Structured cape', 'Mock-neck knit', 'Slim trousers'],
+          colors: ['#0b0a0d', '#1c1a20', '#2e2b33', '#45424b'],
+        },
+      ];
+
+      const state = { photo: null, styles: [] };
+
+      const $ = (id) => document.getElementById(id);
+      const input = $('photo-input');
+      const dropzone = $('dropzone');
+      const preview = $('photo-preview');
+
+      // -------------------------------------------------------------------
+      // Step 1: photo
+      // -------------------------------------------------------------------
+      function showError(msg) {
+        const el = $('photo-error');
+        el.textContent = msg;
+        el.classList.toggle('hidden', !msg);
+      }
+
+      function handleFile(file) {
+        showError('');
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+          showError('That file is not an image. Please choose a JPG, PNG or WebP photo.');
+          return;
+        }
+        if (file.size > MAX_FILE_MB * 1024 * 1024) {
+          showError(`That photo is larger than ${MAX_FILE_MB} MB. Please choose a smaller one.`);
+          return;
+        }
+
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          // Downscale so the photo stays light enough to keep in the profile
+          const max = 900;
+          const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.naturalWidth * k);
+          canvas.height = Math.round(img.naturalHeight * k);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+
+          if (img.naturalWidth > img.naturalHeight * 1.2) {
+            showError('Tip: this photo is landscape. A portrait shot from head to waist works best.');
+          }
+          setPhoto({ src: canvas.toDataURL('image/jpeg', 0.88), name: file.name });
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          showError('We could not read that image. iPhone HEIC photos need converting to JPG first.');
+        };
+        img.src = url;
+      }
+
+      function setPhoto(photo) {
+        state.photo = photo;
+        const has = !!photo;
+        preview.classList.toggle('hidden', !has);
+        dropzone.classList.toggle('hidden', has);
+        $('photo-actions').classList.toggle('hidden', !has);
+        if (has) {
+          preview.src = photo.src;
+          $('photo-name').textContent = photo.name;
+        } else {
+          preview.removeAttribute('src');
+        }
+
+        const status = $('photo-status');
+        status.textContent = has ? 'Reflection captured' : 'No reflection yet';
+        status.className = 'font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded border ' +
+          (has ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40'
+               : 'bg-crimson-900/80 text-crimson-300 border-crimson-400/40');
+        renderSummary();
+      }
+
+      input.addEventListener('change', () => {
+        handleFile(input.files[0]);
+        input.value = ''; // allow choosing the same file again
+      });
+
+      ['dragenter', 'dragover'].forEach((type) =>
+        dropzone.addEventListener(type, (e) => {
+          e.preventDefault();
+          dropzone.classList.add('is-dragging');
+        })
+      );
+      ['dragleave', 'drop'].forEach((type) =>
+        dropzone.addEventListener(type, () => dropzone.classList.remove('is-dragging'))
+      );
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        handleFile(e.dataTransfer.files[0]);
+      });
+
+      $('btn-remove-photo').addEventListener('click', () => {
+        showError('');
+        setPhoto(null);
+      });
+
+      // -------------------------------------------------------------------
+      // Step 2: styles
+      // -------------------------------------------------------------------
+      function renderStyles() {
+        const full = state.styles.length >= MAX_STYLES;
+        $('style-grid').innerHTML = STYLES.map((s) => {
+          const on = state.styles.includes(s.id);
+          return `
+            <button type="button" data-style="${s.id}" aria-pressed="${on}" ${!on && full ? 'disabled' : ''}
+              class="style-card relative text-left rounded-xl border border-gold-400/25 bg-velvet-950/70 enabled:hover:border-gold-400/60 p-4 transition">
+              <span class="style-check absolute top-3 right-3 w-6 h-6 rounded-full bg-gold-400 text-velvet-950 flex items-center justify-center text-sm font-bold opacity-0 scale-75 transition">✓</span>
+              <div class="flex h-2.5 w-28 rounded-full overflow-hidden mb-3">
+                ${s.colors.map((c) => `<span class="flex-1" style="background:${c}"></span>`).join('')}
+              </div>
+              <div class="font-display text-base font-bold text-gold-200 pr-8">${s.name}</div>
+              <p class="text-xs text-stone-400 mt-1 leading-relaxed">${s.note}</p>
+              <div class="flex flex-wrap gap-1.5 mt-3">
+                ${s.pieces.map((p) => `<span class="font-mono text-[10px] px-2 py-0.5 rounded bg-velvet-800 text-stone-300 border border-gold-400/15">${p}</span>`).join('')}
+              </div>
+            </button>`;
+        }).join('');
+        $('style-count').textContent = `${state.styles.length} / ${MAX_STYLES} chosen`;
+      }
+
+      $('style-grid').addEventListener('click', (e) => {
+        const card = e.target.closest('[data-style]');
+        if (!card || card.disabled) return;
+        const id = card.dataset.style;
+        state.styles = state.styles.includes(id)
+          ? state.styles.filter((s) => s !== id)
+          : [...state.styles, id];
+        renderStyles();
+        renderSummary();
+      });
+
+      // -------------------------------------------------------------------
+      // Summary & save
+      // -------------------------------------------------------------------
+      function renderSummary() {
+        const thumb = $('summary-thumb');
+        thumb.classList.toggle('hidden', !state.photo);
+        $('summary-thumb-empty').classList.toggle('hidden', !!state.photo);
+        if (state.photo) thumb.src = state.photo.src;
+
+        const names = state.styles.map((id) => STYLES.find((s) => s.id === id).name);
+        $('summary-tags').innerHTML = names
+          .map((n) => `<span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-crimson-900/60 text-gold-200 border border-gold-400/30">${n}</span>`)
+          .join('');
+
+        const missing = [];
+        if (!state.photo) missing.push('a front photo');
+        if (!names.length) missing.push('at least one style');
+        $('summary-text').textContent = missing.length
+          ? `Still needed: ${missing.join(' and ')}.`
+          : 'Photo and style taste captured. Ready to dress the Count.';
+
+        $('btn-save').disabled = missing.length > 0;
+        $('save-note').textContent = '';
+        $('pill-photo').classList.toggle('bg-gold-400/15', !!state.photo);
+        $('pill-style').classList.toggle('bg-gold-400/15', names.length > 0);
+      }
+
+      $('btn-save').addEventListener('click', () => {
+        const profile = { photo: state.photo, styles: state.styles, savedAt: new Date().toISOString() };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+          $('save-note').textContent = '✓ Saved in this browser';
+        } catch (err) {
+          $('save-note').textContent = 'Could not save here (browser storage is blocked or full).';
+        }
+      });
+
+      function restore() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+          if (saved) {
+            state.styles = (saved.styles || []).filter((id) => STYLES.some((s) => s.id === id)).slice(0, MAX_STYLES);
+            if (saved.photo && saved.photo.src) setPhoto(saved.photo);
+          }
+        } catch (err) { /* storage unavailable: start fresh */ }
+      }
+
+      restore();
+      renderStyles();
+      renderSummary();
+    })();
+  </script>
+</body>
+</html>
