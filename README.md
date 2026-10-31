@@ -60,3 +60,4 @@ This is a hackathon build. The Outfit Studio, the Shopping & Route Matrix and Ca
 
 - Alice Nguyen ([@aliceenguyen](https://github.com/aliceenguyen))
 - [@Hope-C](https://github.com/Hope-C)
+- [@wirinchin33](https://github.com/wirinchin33 )
