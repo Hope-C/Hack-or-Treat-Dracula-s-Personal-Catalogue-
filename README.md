@@ -32,7 +32,15 @@ The three HTML pages are self-contained and need no build step. Open any of them
 
 ### Camera to 3D
 
-You'll need Python 3.10+, Blender 3.0+ and a [Tripo3D](https://platform.tripo3d.ai/) API key. A [Gemini](https://aistudio.google.com/) API key is optional and removes photo backgrounds.
+You'll need Python 3.10+, Blender 3.0+ and a [Tripo3D](https://platform.tripo3d.ai/) API key. An [OpenAI](https://platform.openai.com/api-keys) API key is optional and powers **Try it on**. A [Gemini](https://aistudio.google.com/) API key is optional and removes photo backgrounds.
+
+### Try it on
+
+In Step 3, tick the garments for an outfit and press **Try it on**. The server sends his Step 1 photo and the garment names to OpenAI's image editing API (`gpt-image-2` by default; set `OPENAI_IMAGE_MODEL` to change it), which returns the same person wearing that outfit, shown next to the original. **Make it 3D** turns that image into a 3D model with Tripo, and **Send to Blender** imports it. This needs the Camera to 3D server running on port 8001 with `OPENAI_API_KEY` set.
+
+### Dress in Blender
+
+**Dress in Blender** sends the ticked garments to the Blender add-on, which builds them in 3D around the avatar Tripo made: shirts, waistcoats, trousers and sleeves follow the body's own surface, capes and coat tails drape from the shoulders and hips, and cravats, bow ties and chains sit at the neck. Each fabric (velvet, silk, leather, tweed…) gets its own material. Every new avatar that arrives is dressed in the current outfit automatically, and the **WS Import** panel has buttons to dress again, remove the outfit, or flip it if the cape lands on the chest. No API key is needed. Reinstall `ws_import_addon.zip` after updating, since the add-on now has two files.
 
 ```bash
 cd camera-to-blender
@@ -50,7 +58,7 @@ Install `ws_import_addon.zip` in Blender, open the **WS Import** tab (press `N` 
 
 ## Built with
 
-HTML5, CSS3, JavaScript, Tailwind CSS, Google Fonts, SVG, Canvas, localStorage, Leaflet, Google Maps, Three.js, WebGL, model-viewer, Python, FastAPI, Uvicorn, WebSockets, httpx, Blender (`bpy`), Google Gemini, Tripo3D and ngrok.
+HTML5, CSS3, JavaScript, Tailwind CSS, Google Fonts, SVG, Canvas, localStorage, Leaflet, Google Maps, Three.js, WebGL, model-viewer, Python, FastAPI, Uvicorn, WebSockets, httpx, Blender (`bpy`), Google Gemini, OpenAI image API, Tripo3D and ngrok.
 
 ## Status
 

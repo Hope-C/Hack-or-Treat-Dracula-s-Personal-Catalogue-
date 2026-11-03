@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "relay-server",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "relay_server:app", "--app-dir", "camera-to-blender", "--host", "127.0.0.1", "--port", "8001"],
+      "port": 8001
+    },
+    {
+      "name": "catalogue",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500", "--bind", "127.0.0.1"],
+      "port": 5500
+    }
+  ]
+}

@@ -3,8 +3,9 @@ Photo → 3D → Blender relay server.
 
 Endpoints:
   POST /isolate     - Remove background from image (Gemini API)
+  POST /tryon       - Dress the person in a photo in chosen garments (OpenAI API)
   POST /generate3d  - Generate 3D model from image (Tripo API)
-  POST /relay       - Forward model URL to WebSocket clients (Blender)
+  POST /relay       - Forward a model URL or an outfit to WebSocket clients (Blender)
   WS   /ws?client=X - WebSocket connection for clients
 
 Usage:
@@ -13,11 +14,12 @@ Usage:
   uvicorn relay_server:app --host 0.0.0.0 --port 8000
 """
 import asyncio
+import base64
 import json
 import os
 import sys
 import httpx
-from typing import Dict, Set
+from typing import Dict, List, Set
 
 # Log lines use ✓/⚠. On Windows, piped/redirected stdout defaults to cp1252,
 # where print() of those raises UnicodeEncodeError mid-request.
@@ -27,7 +29,7 @@ for _stream in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,14 +41,18 @@ load_dotenv()
 # Config
 TRIPO_API_KEY = os.getenv("TRIPO_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-2")
+OPENAI_BASE_URL = "https://api.openai.com/v1"
 
 TRIPO_BASE_URL = "https://api.tripo3d.ai/v2/openapi"
 
 
 class RelayPayload(BaseModel):
     target: str
-    url: str
-    type: str = "model"
+    url: str = ""
+    type: str = "model"  # "model" (import url) or "outfit" (dress the avatar in garments)
+    garments: List[str] = []
 
 
 app = FastAPI(title="Photo → 3D → Blender")
@@ -197,6 +203,92 @@ async def isolate_object(image: UploadFile = File(...)):
                 status_code=500,
                 detail=f"Background removal failed: {error_msg[:200]}"
             )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Virtual try-on (OpenAI image editing)
+# ─────────────────────────────────────────────────────────────────────────────
+@app.post("/tryon")
+async def try_on(image: UploadFile = File(...), garments: str = Form(...)):
+    """
+    Return a photo of the same person wearing the chosen garments.
+
+    `garments` is a JSON list of garment names, e.g. ["Velvet Evening Cape", "Silk Cravat"].
+    The result is a full-length, front-facing shot on white, so it can be fed
+    straight into /generate3d.
+    """
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
+
+    try:
+        names = json.loads(garments)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="garments must be a JSON list of names")
+    if not isinstance(names, list):
+        raise HTTPException(status_code=400, detail="garments must be a JSON list of names")
+    names = [str(n).strip()[:80] for n in names if str(n).strip()][:12]
+    if not names:
+        raise HTTPException(status_code=400, detail="Pick at least one garment to try on")
+
+    image_bytes = await image.read()
+    mime_type = image.content_type if (image.content_type or "").startswith("image/") else "image/jpeg"
+    ext = {"image/png": "png", "image/webp": "webp"}.get(mime_type, "jpg")
+
+    outfit = "\n".join(f"- {n}" for n in names)
+    prompt = (
+        "Virtual try-on. Dress the person in this photo in exactly this outfit:\n"
+        f"{outfit}\n\n"
+        "Keep the same person: identical face, hair, skin tone, body shape and proportions. "
+        "Replace only their clothing; remove any garments that clash with the outfit. "
+        "The garments must fit their body naturally, with realistic drape, folds and fabric texture. "
+        "Show one person, standing, facing the camera, full length from head to shoes "
+        "(extend the image if the photo is cropped), centered on a plain white background, "
+        "soft studio lighting, photorealistic."
+    )
+
+    form = {
+        "model": OPENAI_IMAGE_MODEL,
+        "prompt": prompt,
+        "size": "1024x1536",  # portrait, room for a full-length shot
+        "output_format": "png",
+    }
+    # Only gpt-image-1 / 1.5 take input_fidelity (keeps the face close to the photo);
+    # gpt-image-2 rejects it, and -mini doesn't support it
+    if OPENAI_IMAGE_MODEL.startswith("gpt-image-1") and "mini" not in OPENAI_IMAGE_MODEL:
+        form["input_fidelity"] = "high"
+
+    print(f"[TryOn] Calling OpenAI {OPENAI_IMAGE_MODEL} with {len(names)} garment(s)...")
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        try:
+            resp = await client.post(
+                f"{OPENAI_BASE_URL}/images/edits",
+                headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
+                data=form,
+                files={"image": (f"photo.{ext}", image_bytes, mime_type)},
+            )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="OpenAI took too long to respond. Try again.")
+
+    if resp.status_code != 200:
+        try:
+            message = resp.json()["error"]["message"]
+        except (ValueError, KeyError, TypeError):
+            message = resp.text[:200]
+        print(f"[TryOn] Error {resp.status_code}: {message}")
+        if resp.status_code == 401:
+            raise HTTPException(status_code=401, detail=f"OpenAI API key rejected. Check OPENAI_API_KEY. {message[:200]}")
+        if resp.status_code == 429:
+            raise HTTPException(status_code=429, detail=f"OpenAI quota or rate limit reached. {message[:200]}")
+        raise HTTPException(status_code=resp.status_code, detail=f"Try-on failed: {message[:200]}")
+
+    images = resp.json().get("data") or []
+    if not images or not images[0].get("b64_json"):
+        print("[TryOn] ⚠ No image in response")
+        raise HTTPException(status_code=502, detail="OpenAI did not return an image. Try again or use a clearer front photo.")
+
+    result_bytes = base64.b64decode(images[0]["b64_json"])
+    print(f"[TryOn] ✓ Outfit rendered ({len(result_bytes)} bytes)")
+    return Response(content=result_bytes, media_type="image/png")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -435,6 +527,7 @@ async def health():
         "status": "ok",
         "tripo_configured": bool(TRIPO_API_KEY),
         "gemini_configured": bool(GEMINI_API_KEY),
+        "openai_configured": bool(OPENAI_API_KEY),
         "connected_clients": {k: len(v) for k, v in connections.items()}
     }
 

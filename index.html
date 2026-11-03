@@ -15,6 +15,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- model-viewer for the 3D try-on result -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -344,9 +346,17 @@
                 <h3 class="font-display text-lg sm:text-xl font-bold text-gold-200">Recommended wardrobe</h3>
                 <p class="text-xs text-stone-400">Ticked garments are added to the cost table and route.</p>
               </div>
-              <button id="btn-open-custom" type="button" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-velvet-800 hover:bg-crimson-600 text-gold-200 border border-gold-400/30 transition flex items-center gap-1.5 no-print">
-                <i class="fa-solid fa-plus"></i> Add custom garment
-              </button>
+              <div class="flex flex-wrap gap-2 no-print">
+                <button id="btn-tryon" type="button" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-400 hover:to-gold-300 text-velvet-950 shadow-lg transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-person-half-dress"></i> Try it on
+                </button>
+                <button id="btn-dress-blender" type="button" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white border border-gold-400/40 transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-cube"></i> Dress in Blender
+                </button>
+                <button id="btn-open-custom" type="button" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-velvet-800 hover:bg-crimson-600 text-gold-200 border border-gold-400/30 transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-plus"></i> Add custom garment
+                </button>
+              </div>
             </div>
 
             <div class="mt-4 flex flex-col sm:flex-row gap-3 no-print">
@@ -515,6 +525,52 @@
           <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-crimson-600 text-white hover:bg-crimson-500">Add to list</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Try-on modal: his photo next to the same photo wearing the ticked garments -->
+  <div id="tryon-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1100] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="tryon-title">
+    <div class="gothic-card w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl p-5 sm:p-6">
+      <div class="flex justify-between items-center pb-3 border-b border-gold-400/15">
+        <h3 id="tryon-title" class="font-display text-lg font-bold text-gold-200">🪞 The mirror that works</h3>
+        <button id="btn-close-tryon" type="button" class="text-stone-400 hover:text-white text-lg" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div id="tryon-garments" class="flex flex-wrap gap-1.5 mt-4"></div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
+        <figure>
+          <figcaption class="font-mono text-[10px] uppercase tracking-widest text-stone-400 mb-1.5">Before</figcaption>
+          <div class="aspect-[3/4] rounded-xl overflow-hidden border border-gold-400/25 bg-velvet-950">
+            <img id="tryon-before" alt="His photo" class="w-full h-full object-cover">
+          </div>
+        </figure>
+        <figure>
+          <figcaption class="font-mono text-[10px] uppercase tracking-widest text-gold-300 mb-1.5">Wearing the outfit</figcaption>
+          <div class="relative aspect-[3/4] rounded-xl overflow-hidden border border-gold-400/50 bg-velvet-950">
+            <img id="tryon-after" alt="Him wearing the ticked garments" class="hidden w-full h-full object-contain bg-white">
+            <model-viewer id="tryon-3d" class="hidden w-full h-full" camera-controls auto-rotate shadow-intensity="1" exposure="1.1" style="background:#110b15"></model-viewer>
+            <div id="tryon-loading" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4">
+              <i class="fa-solid fa-spinner fa-spin text-2xl text-gold-300"></i>
+              <span class="text-xs text-stone-400">Tailoring the look...</span>
+            </div>
+          </div>
+        </figure>
+      </div>
+
+      <p id="tryon-status" class="mt-4 text-sm text-stone-300" role="status"></p>
+
+      <div class="mt-4 flex flex-wrap gap-2 justify-end">
+        <button id="btn-tryon-again" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-velvet-800 text-gold-200 border border-gold-400/30 hover:bg-velvet-700 disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-rotate mr-1"></i> Try again
+        </button>
+        <button id="btn-tryon-3d" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-crimson-600 text-white hover:bg-crimson-500 disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-cube mr-1"></i> Make it 3D
+        </button>
+        <button id="btn-tryon-blender" type="button" class="hidden px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-gold-500 to-gold-400 text-velvet-950 hover:from-gold-400 hover:to-gold-300">
+          <i class="fa-solid fa-paper-plane mr-1"></i> Send to Blender
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1188,6 +1244,212 @@
         updateCalculations();
         showToast(`Added ${name}`);
       });
+
+      // -------------------------------------------------------------------
+      // Try-on: his photo + ticked garments -> Gemini -> (optional) Tripo 3D -> Blender
+      // -------------------------------------------------------------------
+      const API_BASE = 'http://localhost:8001'; // camera-to-blender relay server
+      // `run` lets a closed or restarted try-on ignore late replies
+      const tryon = { run: 0, blob: null, modelUrl: null, streams: [] };
+      const tryonModal = $('tryon-modal');
+
+      async function apiError(res, fallback) {
+        const body = await res.json().catch(() => ({}));
+        return new Error(body.detail || `${fallback} (HTTP ${res.status})`);
+      }
+
+      function setTryonStatus(msg, isError = false) {
+        $('tryon-status').textContent = msg;
+        $('tryon-status').className = `mt-4 text-sm ${isError ? 'text-crimson-300' : 'text-stone-300'}`;
+      }
+
+      function setTryonView(view) { // 'loading' | 'image' | '3d' | 'empty'
+        $('tryon-loading').classList.toggle('hidden', view !== 'loading');
+        $('tryon-after').classList.toggle('hidden', view !== 'image');
+        $('tryon-3d').classList.toggle('hidden', view !== '3d');
+      }
+
+      function stopTryonStreams() {
+        tryon.streams.forEach((es) => es.close());
+        tryon.streams = [];
+      }
+
+      function closeTryOn() {
+        tryon.run++;
+        stopTryonStreams();
+        tryonModal.classList.add('hidden');
+        tryonModal.classList.remove('flex');
+      }
+
+      async function runTryOn() {
+        const picked = items.filter((i) => i.checked);
+        if (!state.photo) {
+          showToast('Add his front photo in Step 1 first.', 'warning');
+          $('step-photo').scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+        if (!picked.length) {
+          showToast('Tick at least one garment to try on.', 'warning');
+          return;
+        }
+
+        const run = ++tryon.run;
+        stopTryonStreams();
+        tryon.blob = null;
+        tryon.modelUrl = null;
+        tryonModal.classList.remove('hidden');
+        tryonModal.classList.add('flex');
+        $('tryon-before').src = state.photo.src;
+        $('tryon-garments').innerHTML = picked
+          .map((i) => `<span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-crimson-900/60 text-gold-200 border border-gold-400/30">${i.icon} ${esc(i.name)}</span>`)
+          .join('');
+        $('btn-tryon-again').disabled = true;
+        $('btn-tryon-3d').disabled = true;
+        $('btn-tryon-blender').classList.add('hidden');
+        setTryonView('loading');
+        setTryonStatus('Dressing him in the chosen garments. This can take up to a minute.');
+
+        try {
+          const form = new FormData();
+          form.append('image', await (await fetch(state.photo.src)).blob(), 'photo.jpg');
+          form.append('garments', JSON.stringify(picked.map((i) => i.name)));
+          const res = await fetch(`${API_BASE}/tryon`, { method: 'POST', body: form });
+          if (res.status === 404 || res.status === 405) {
+            throw new Error(`The server at ${API_BASE} has no try-on yet. Restart camera-to-blender to pick up the new code.`);
+          }
+          if (!res.ok) throw await apiError(res, 'Try-on failed');
+          const blob = await res.blob();
+          if (run !== tryon.run) return;
+
+          tryon.blob = blob;
+          URL.revokeObjectURL($('tryon-after').src);
+          $('tryon-after').src = URL.createObjectURL(blob);
+          setTryonView('image');
+          setTryonStatus('AI preview. Fit and colour may differ slightly from the real garments.');
+          $('btn-tryon-3d').disabled = false;
+        } catch (err) {
+          if (run !== tryon.run) return;
+          setTryonView('empty');
+          setTryonStatus(err instanceof TypeError
+            ? `Could not reach the try-on server at ${API_BASE}. Start camera-to-blender (see README) and try again.`
+            : err.message, true);
+        } finally {
+          if (run === tryon.run) $('btn-tryon-again').disabled = false;
+        }
+      }
+
+      // Tripo expects PNG; Gemini may hand back JPEG
+      async function toPng(blob) {
+        if (blob.type === 'image/png') return blob;
+        const bitmap = await createImageBitmap(blob);
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext('2d').drawImage(bitmap, 0, 0);
+        return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      }
+
+      async function makeTryOn3D() {
+        if (!tryon.blob) return;
+        const run = tryon.run;
+        $('btn-tryon-3d').disabled = true;
+        $('btn-tryon-again').disabled = true;
+        setTryonStatus('Building a 3D model of the look. About a minute...');
+
+        try {
+          const form = new FormData();
+          form.append('image', await toPng(tryon.blob), 'image.png');
+          const res = await fetch(`${API_BASE}/generate3d`, { method: 'POST', body: form });
+          if (!res.ok) throw await apiError(res, '3D generation failed');
+          const { preview_task_id, final_task_id } = await res.json();
+          if (run !== tryon.run) return;
+
+          // Show the untextured preview as soon as it lands, then swap in the textured model
+          const show = (url, final) => {
+            tryon.modelUrl = url;
+            $('tryon-3d').setAttribute('src', `${API_BASE}/proxy-model?url=${encodeURIComponent(url)}`);
+            setTryonView('3d');
+            $('btn-tryon-blender').classList.remove('hidden');
+            $('btn-tryon-again').disabled = false;
+            setTryonStatus(final ? 'Textured 3D model ready. Drag to turn him around.' : 'Shape ready, adding fabric textures...');
+          };
+          const stream = (taskId, final) => {
+            const es = new EventSource(`${API_BASE}/generate3d/${taskId}/stream`);
+            tryon.streams.push(es);
+            es.addEventListener('progress', (e) => {
+              const { progress } = JSON.parse(e.data);
+              if (final && progress && !tryon.modelUrl) setTryonStatus(`Building a 3D model of the look... ${progress}%`);
+            });
+            es.addEventListener('complete', (e) => {
+              es.close();
+              if (final || !tryon.modelUrl) show(JSON.parse(e.data).model_url, final);
+            });
+            es.addEventListener('error', (e) => {
+              es.close();
+              if (!final) return; // the textured model can still arrive
+              let msg = 'Connection lost while building the 3D model.';
+              try { msg = JSON.parse(e.data).error || msg; } catch (_) { /* network error, no payload */ }
+              if (!tryon.modelUrl) {
+                setTryonStatus(msg, true);
+                $('btn-tryon-3d').disabled = false;
+                $('btn-tryon-again').disabled = false;
+              }
+            });
+          };
+          stream(preview_task_id, false);
+          stream(final_task_id, true);
+        } catch (err) {
+          if (run !== tryon.run) return;
+          setTryonStatus(err.message, true);
+          $('btn-tryon-3d').disabled = false;
+          $('btn-tryon-again').disabled = false;
+        }
+      }
+
+      async function sendTryOnToBlender() {
+        if (!tryon.modelUrl) return;
+        try {
+          const res = await fetch(`${API_BASE}/relay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target: 'blender', type: 'model', url: tryon.modelUrl }),
+          });
+          if (!res.ok) throw await apiError(res, 'Relay failed');
+          showToast('Sent to Blender. Check the viewport.');
+        } catch (err) {
+          showToast('Blender is not connected. Open the WS Import tab and connect.', 'warning');
+        }
+      }
+
+      // Put the ticked garments on the 3D avatar in Blender (the add-on builds them)
+      async function dressInBlender() {
+        const picked = items.filter((i) => i.checked);
+        if (!picked.length) {
+          showToast('Tick at least one garment to dress him in.', 'warning');
+          return;
+        }
+        try {
+          const res = await fetch(`${API_BASE}/relay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target: 'blender', type: 'outfit', garments: picked.map((i) => i.name) }),
+          });
+          if (res.status === 404) throw new Error('Blender is not connected. Open the WS Import tab and connect.');
+          if (!res.ok) throw await apiError(res, 'Could not reach Blender');
+          showToast(`Sent ${picked.length} garment(s) to Blender`);
+        } catch (err) {
+          showToast(err instanceof TypeError ? `Start camera-to-blender at ${API_BASE} first.` : err.message, 'warning');
+        }
+      }
+
+      $('btn-dress-blender').addEventListener('click', dressInBlender);
+      $('btn-tryon').addEventListener('click', runTryOn);
+      $('btn-tryon-again').addEventListener('click', runTryOn);
+      $('btn-tryon-3d').addEventListener('click', makeTryOn3D);
+      $('btn-tryon-blender').addEventListener('click', sendTryOnToBlender);
+      $('btn-close-tryon').addEventListener('click', closeTryOn);
+      tryonModal.addEventListener('click', (e) => { if (e.target === tryonModal) closeTryOn(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !tryonModal.classList.contains('hidden')) closeTryOn(); });
 
       // -------------------------------------------------------------------
       // Ambient bats
