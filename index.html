@@ -427,7 +427,7 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>
                   Upload photo
                 </button>
-                <a href="http://localhost:8001" class="btn btn-outline" title="Opens camera-to-blender at localhost:8001">
+                <a href="http://localhost:8001/camera/" data-camera-link class="btn btn-outline" title="Opens Camera to 3D">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
                   Camera to 3D
                 </a>
@@ -443,7 +443,7 @@
         <div id="photo-actions" class="photo-actions hidden">
           <span id="photo-name" class="photo-name"></span>
           <button id="btn-replace-photo" type="button" class="btn btn-ghost">Replace photo</button>
-          <a href="http://localhost:8001" class="btn btn-ghost">Camera to 3D</a>
+          <a href="http://localhost:8001/camera/" data-camera-link class="btn btn-ghost">Camera to 3D</a>
           <button id="btn-remove-photo" type="button" class="btn btn-ghost">Remove</button>
         </div>
 
@@ -1566,7 +1566,12 @@
       // -------------------------------------------------------------------
       // Try-on: his photo + ticked garments -> image model -> (optional) Tripo 3D -> Blender
       // -------------------------------------------------------------------
-      const API_BASE = 'http://localhost:8001'; // camera-to-blender relay server
+      // camera-to-blender relay server: same origin when the server serves this page
+      // (Render, or localhost:8001); otherwise (local static server on :5500, file://) localhost:8001
+      const API_BASE = location.protocol.startsWith('http') &&
+        !(/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port !== '8001')
+        ? location.origin : 'http://localhost:8001';
+      document.querySelectorAll('[data-camera-link]').forEach(a => { a.href = `${API_BASE}/camera/`; });
       // `run` lets a closed or restarted try-on ignore late replies
       const tryon = { run: 0, blob: null, modelUrl: null, streams: [], opener: null };
       const tryonModal = $('tryon-modal');

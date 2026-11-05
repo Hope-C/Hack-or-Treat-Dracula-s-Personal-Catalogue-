@@ -598,6 +598,31 @@ async def connection_info(request: Request):
 # ─────────────────────────────────────────────────────────────────────────────
 import pathlib
 
+from fastapi.responses import FileResponse, RedirectResponse
+
+# Catalogue pages from the repo root. Listed one by one so the server never
+# exposes anything else in the repo (e.g. a local .env).
+repo_root = pathlib.Path(__file__).resolve().parent.parent
+CATALOGUE_PAGES = {
+    "": "index.html",
+    "index.html": "index.html",
+    "findingshops.html": "findingshops.html",
+    "dracula_outfit_studio.html": "dracula_outfit_studio.html",
+    "count_dracula_the_sartorial_mirror_project - Copy.html": "count_dracula_the_sartorial_mirror_project - Copy.html",
+    "camera-to-blender/README.md": "camera-to-blender/README.md",
+}
+
+# Camera-to-3D webapp lives under /camera/ so the catalogue can own "/".
 webapp_dir = pathlib.Path(__file__).parent / "webapp"
 if webapp_dir.exists():
-    app.mount("/", StaticFiles(directory=str(webapp_dir), html=True), name="webapp")
+    app.mount("/camera", StaticFiles(directory=str(webapp_dir), html=True), name="webapp")
+
+
+@app.get("/{page:path}", include_in_schema=False)
+async def catalogue_page(page: str):
+    if page == "camera":
+        return RedirectResponse("/camera/")
+    rel = CATALOGUE_PAGES.get(page)
+    if rel is None or not (repo_root / rel).is_file():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(repo_root / rel)

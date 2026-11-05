@@ -240,9 +240,9 @@
     <div class="gothic-card w-full max-w-sm rounded-2xl p-6">
       <h3 id="photo-choice-title" class="font-display text-lg font-bold text-gold-200 text-center">How shall we capture him?</h3>
       <div class="mt-5 grid gap-3">
-        <a href="http://localhost:8001" class="block rounded-xl border border-gold-400/40 bg-velvet-800 hover:bg-velvet-700 px-4 py-3 text-left transition">
+        <a href="http://localhost:8001/camera/" data-camera-link class="block rounded-xl border border-gold-400/40 bg-velvet-800 hover:bg-velvet-700 px-4 py-3 text-left transition">
           <span class="block font-display text-sm font-bold text-gold-200 uppercase tracking-wider">&#128247; Camera to 3D</span>
-          <span class="block mt-0.5 text-xs text-stone-400">Open camera-to-blender at localhost:8001</span>
+          <span class="block mt-0.5 text-xs text-stone-400">Open the Camera to 3D app</span>
         </a>
         <button id="btn-choice-upload" type="button" class="w-full rounded-xl border border-gold-400/40 bg-velvet-800 hover:bg-velvet-700 px-4 py-3 text-left transition">
           <span class="block font-display text-sm font-bold text-gold-200 uppercase tracking-wider">&#128444;&#65039; Upload a photo</span>
@@ -506,6 +506,11 @@
       renderStyles();
       renderSummary();
     })();
+  </script>
+  <script>
+    // Point "Camera to 3D" at this server when it serves the page (e.g. on Render)
+    if (location.protocol.startsWith('http') && !(/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port !== '8001'))
+      document.querySelectorAll('[data-camera-link]').forEach(a => { a.href = `${location.origin}/camera/`; });
   </script>
 </body>
 </html>

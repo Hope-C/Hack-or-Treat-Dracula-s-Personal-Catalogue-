@@ -1,0 +1,20 @@
+# Render Blueprint: one web service serves the catalogue (/), the Camera to 3D
+# app (/camera/) and the API (/tryon, /generate3d, /relay, /ws ...).
+services:
+  - type: web
+    name: dracula-catalogue
+    runtime: python
+    plan: free
+    buildCommand: pip install -r camera-to-blender/requirements.txt
+    # --forwarded-allow-ips: trust Render's proxy so https/wss are detected correctly
+    startCommand: uvicorn relay_server:app --app-dir camera-to-blender --host 0.0.0.0 --port $PORT --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: TRIPO_API_KEY
+        sync: false   # entered in the Render dashboard, never committed
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_IMAGE_MODEL
+        value: gpt-image-2
