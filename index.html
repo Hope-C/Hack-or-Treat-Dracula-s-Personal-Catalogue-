@@ -1121,7 +1121,8 @@
       }
 
       $('btn-save').addEventListener('click', () => {
-        const profile = { photo: state.photo, styles: state.styles, savedAt: new Date().toISOString() };
+        // Only the styles are saved; the photo is never kept between visits.
+        const profile = { styles: state.styles, savedAt: new Date().toISOString() };
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
           $('save-note').textContent = 'Saved in this browser';
@@ -1791,7 +1792,11 @@
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
           if (saved) {
             state.styles = (saved.styles || []).filter((id) => STYLES.some((s) => s.id === id)).slice(0, MAX_STYLES);
-            if (saved.photo && saved.photo.src) setPhoto(saved.photo);
+            // Photos saved by older versions: drop them so the page always opens without one
+            if (saved.photo) {
+              const { photo, ...rest } = saved;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
+            }
           }
         } catch (err) { /* storage unavailable: start fresh */ }
       }
