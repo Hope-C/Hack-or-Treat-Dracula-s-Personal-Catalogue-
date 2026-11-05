@@ -215,8 +215,8 @@
     .item { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 14px 16px; border-top: 1px solid var(--line); transition: background-color .15s; }
     .item.is-on { background: var(--panel-2); }
     .item-main { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: 16px; min-height: 52px; cursor: pointer; }
-    .swatch { width: 40px; height: 52px; flex: none; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(237, 228, 211, 0.16); }
-    .swatch.is-bespoke { background: repeating-linear-gradient(135deg, #2A2223 0 6px, #3A3132 6px 12px); }
+    .garment { width: 56px; height: 70px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: radial-gradient(ellipse at 50% 35%, #2A2122 0%, #161213 75%); box-shadow: inset 0 0 0 1px rgba(237, 228, 211, 0.1); }
+    .garment svg { width: 46px; height: 58px; display: block; }
     .item-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
     .item-name { font-size: 16px; font-weight: 600; }
     .item:not(.is-on) .item-name { color: var(--bone-2); }
@@ -233,7 +233,7 @@
       .item { padding: 14px 4px; gap: 10px 14px; }
       .item-main { flex-basis: 100%; }
       .item .tag { display: none; } /* the "only his styles" filter already says it */
-      .stepper { order: 1; margin-left: 56px; }
+      .stepper { order: 1; margin-left: 36px; }
       .item-price { order: 2; margin-left: auto; min-width: 0; }
       .item-remove { order: 3; }
     }
@@ -274,12 +274,10 @@
     .stop:first-child { padding-top: 0; border-top: 0; }
     .stop-mark { width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700; }
     .stop-mark.origin { background: none; }
-    .stop-mark.origin span { width: 14px; height: 14px; background: var(--bone); transform: rotate(45deg); }
-    .stop-mark.origin.is-me span { border-radius: 50%; transform: none; border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(227, 89, 108, 0.25); }
-    .origin-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-    .origin-label { font-size: 13px; font-weight: 600; color: var(--muted); }
-    .segmented button { display: inline-flex; align-items: center; gap: 6px; }
-    .segmented button:disabled { opacity: 0.6; cursor: progress; }
+    .stop-mark.origin span { width: 16px; height: 16px; border-radius: 50%; border: 2px dashed var(--line-3); }
+    .stop-mark.origin.is-me span { width: 14px; height: 14px; background: var(--bone); border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(227, 89, 108, 0.25); }
+    .btn-sm { min-height: 40px; padding: 0 14px; font-size: 13px; }
+    .btn-sm:disabled { cursor: progress; }
     .stop-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
     .stop-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .stop-name { font-family: var(--serif); font-size: 20px; }
@@ -304,8 +302,6 @@
     .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
     .pin { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #2A2223; border: 1.5px solid var(--line-3); color: var(--on-accent); font: 700 13px/1 var(--sans); }
     .pin.on { background: var(--accent); border-color: var(--bone); }
-    .pin-origin { display: block; width: 18px; height: 18px; margin: 2px; background: var(--bone); transform: rotate(45deg); box-shadow: 0 0 0 4px rgba(237, 228, 211, 0.18); }
-    .pin-origin.is-faded { opacity: 0.45; }
     .pin-me { display: block; width: 18px; height: 18px; margin: 2px; border-radius: 50%; background: var(--bone); border: 4px solid var(--accent); box-shadow: 0 0 0 6px rgba(227, 89, 108, 0.3); }
 
     /* ---------- Footer ---------- */
@@ -588,28 +584,24 @@
         <div class="chapter-head">
           <span class="eyebrow">IV · The route</span>
           <h2 id="route-title" class="h2">No stops yet</h2>
-          <p id="route-sub" class="lede">Tick a garment and the route draws itself, starting at the castle.</p>
+          <p id="route-sub" class="lede">Tick a garment and the route draws itself from where you are.</p>
         </div>
 
         <div class="route">
-          <div class="map-frame"><div id="map" role="region" aria-label="Map of the route from Casa Loma"></div></div>
+          <div class="map-frame"><div id="map" role="region" aria-label="Map of the route to the boutiques"></div></div>
           <div class="itinerary">
-            <div class="origin-row no-print">
-              <span class="origin-label">Start from</span>
-              <div id="origin-tabs" class="segmented" role="group" aria-label="Start the route from">
-                <button type="button" data-origin="casa" aria-pressed="true">Casa Loma</button>
-                <button type="button" data-origin="me" aria-pressed="false">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-                  <span id="origin-me-label">My location</span>
-                </button>
-              </div>
-            </div>
             <ol class="stops">
               <li class="stop">
                 <span id="origin-mark" class="stop-mark origin" aria-hidden="true"><span></span></span>
                 <span class="stop-body">
-                  <span id="origin-name" class="stop-name">Casa Loma</span>
-                  <span id="origin-meta" class="stop-meta">1 Austin Terrace · the start</span>
+                  <span class="stop-head" style="align-items: center;">
+                    <span id="origin-name" class="stop-name">Where are you?</span>
+                    <button id="btn-locate" type="button" class="btn btn-ghost btn-sm no-print">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+                      <span id="locate-label">Use my location</span>
+                    </button>
+                  </span>
+                  <span id="origin-meta" class="stop-meta">Share your location and the route starts from there.</span>
                 </span>
               </li>
             </ol>
@@ -780,14 +772,8 @@
         },
       ];
 
-      // Dracula's Toronto route: Casa Loma origin plus the boutiques
+      // The Toronto boutiques on the route
       const STORES = {
-        'Casa Loma': {
-          name: 'Casa Loma Castle',
-          address: '1 Austin Terrace, Toronto, ON M5R 1X8',
-          lat: 43.6780, lng: -79.4094,
-          isOrigin: true,
-        },
         'Holt Renfrew': {
           name: 'Holt Renfrew (Yorkville)',
           address: '50 Bloor St W, Toronto, ON M4W 1A1',
@@ -810,36 +796,132 @@
           hours: '11 am – 7 pm',
         },
       };
-      const BOUTIQUES = Object.keys(STORES).filter((k) => !STORES[k].isOrigin);
+      const BOUTIQUES = Object.keys(STORES);
 
-      // Where the route starts: Casa Loma, or the visitor's own position
-      const ORIGIN_KEY = 'dracucloth-origin';
-      const CASA = {
-        kind: 'casa', name: 'Casa Loma', meta: '1 Austin Terrace · the start', from: 'Casa Loma', start: 'at the castle',
-        lat: STORES['Casa Loma'].lat, lng: STORES['Casa Loma'].lng, address: STORES['Casa Loma'].address,
-      };
-      let origin = CASA;
+      // Where the route starts: the visitor's own position, once they share it
+      let origin = null; // { meta, lat, lng, address }
 
       // Wardrobe catalogue; `styles` decides which picks recommend each garment,
-      // `swatch` is the fabric colour shown next to it
+      // `swatch` is the fabric colour and `art` the illustration drawn next to it
       let items = [
-        { id: 'item-1', name: 'Velvet Evening Cape', price: 450, store: 'Holt Renfrew', kind: 'Outerwear', swatch: '#4A0E1C', styles: ['victorian', 'maximal'] },
-        { id: 'item-2', name: 'Silk Cravat & Pocket Square', price: 85, store: 'Holt Renfrew', kind: 'Neckwear', swatch: '#7A1426', styles: ['victorian', 'maximal'] },
-        { id: 'item-3', name: 'Athletic-Fit Dress Shirt', price: 140, store: 'State & Liberty', kind: 'Shirt', swatch: '#E8E1D3', styles: ['victorian', 'academia', 'minimal'] },
-        { id: 'item-4', name: 'Stretch Formal Trousers', price: 195, store: 'State & Liberty', kind: 'Trousers', swatch: '#1B1B1F', styles: ['victorian', 'academia', 'quiet', 'maximal', 'minimal'] },
-        { id: 'item-5', name: 'Gothic Frock Coat', price: 380, store: 'Borderline Plus', kind: 'Coat', swatch: '#2A1A22', styles: ['victorian', 'maximal'] },
-        { id: 'item-6', name: 'Theatrical Waistcoat', price: 160, store: 'Borderline Plus', kind: 'Waistcoat', swatch: '#5B2333', styles: ['victorian', 'maximal'] },
-        { id: 'item-7', name: 'Tweed Sport Blazer', price: 495, store: 'State & Liberty', kind: 'Blazer', swatch: '#6B5B45', styles: ['academia'] },
-        { id: 'item-8', name: 'Cable-Knit Sweater Vest', price: 120, store: 'Holt Renfrew', kind: 'Knitwear', swatch: '#8A7A5E', styles: ['academia'] },
-        { id: 'item-9', name: 'Cashmere Overcoat', price: 1250, store: 'Holt Renfrew', kind: 'Coat', swatch: '#3A332E', styles: ['quiet', 'minimal'] },
-        { id: 'item-10', name: 'Merino Turtleneck', price: 245, store: 'Holt Renfrew', kind: 'Knitwear', swatch: '#1F1C1C', styles: ['quiet', 'minimal', 'academia'] },
-        { id: 'item-11', name: 'Leather Moto Jacket', price: 420, store: 'Borderline Plus', kind: 'Outerwear', swatch: '#121012', styles: ['street'] },
-        { id: 'item-12', name: 'Oversized Bat-Print Tee', price: 45, store: 'Borderline Plus', kind: 'Tee', swatch: '#2B2B2B', styles: ['street'] },
-        { id: 'item-13', name: 'Layered Silver Chains', price: 60, store: 'Borderline Plus', kind: 'Jewellery', swatch: '#B8B8B8', styles: ['street'] },
-        { id: 'item-14', name: 'Slim Black Denim', price: 110, store: 'Borderline Plus', kind: 'Trousers', swatch: '#17181C', styles: ['street'] },
-        { id: 'item-15', name: 'Silk Jacquard Bow Tie', price: 70, store: 'Holt Renfrew', kind: 'Neckwear', swatch: '#6E1022', styles: ['maximal'] },
-        { id: 'item-16', name: 'Structured Wool Cape', price: 520, store: 'Borderline Plus', kind: 'Outerwear', swatch: '#222225', styles: ['minimal'] },
+        { id: 'item-1', name: 'Velvet Evening Cape', price: 450, store: 'Holt Renfrew', kind: 'Outerwear', swatch: '#4A0E1C', art: 'cape', styles: ['victorian', 'maximal'] },
+        { id: 'item-2', name: 'Silk Cravat & Pocket Square', price: 85, store: 'Holt Renfrew', kind: 'Neckwear', swatch: '#7A1426', art: 'cravat', styles: ['victorian', 'maximal'] },
+        { id: 'item-3', name: 'Athletic-Fit Dress Shirt', price: 140, store: 'State & Liberty', kind: 'Shirt', swatch: '#E8E1D3', art: 'shirt', styles: ['victorian', 'academia', 'minimal'] },
+        { id: 'item-4', name: 'Stretch Formal Trousers', price: 195, store: 'State & Liberty', kind: 'Trousers', swatch: '#1B1B1F', art: 'trousers', styles: ['victorian', 'academia', 'quiet', 'maximal', 'minimal'] },
+        { id: 'item-5', name: 'Gothic Frock Coat', price: 380, store: 'Borderline Plus', kind: 'Coat', swatch: '#2A1A22', art: 'frock', styles: ['victorian', 'maximal'] },
+        { id: 'item-6', name: 'Theatrical Waistcoat', price: 160, store: 'Borderline Plus', kind: 'Waistcoat', swatch: '#5B2333', art: 'waistcoat', styles: ['victorian', 'maximal'] },
+        { id: 'item-7', name: 'Tweed Sport Blazer', price: 495, store: 'State & Liberty', kind: 'Blazer', swatch: '#6B5B45', art: 'blazer', styles: ['academia'] },
+        { id: 'item-8', name: 'Cable-Knit Sweater Vest', price: 120, store: 'Holt Renfrew', kind: 'Knitwear', swatch: '#8A7A5E', art: 'vest', styles: ['academia'] },
+        { id: 'item-9', name: 'Cashmere Overcoat', price: 1250, store: 'Holt Renfrew', kind: 'Coat', swatch: '#3A332E', art: 'overcoat', styles: ['quiet', 'minimal'] },
+        { id: 'item-10', name: 'Merino Turtleneck', price: 245, store: 'Holt Renfrew', kind: 'Knitwear', swatch: '#1F1C1C', art: 'turtleneck', styles: ['quiet', 'minimal', 'academia'] },
+        { id: 'item-11', name: 'Leather Moto Jacket', price: 420, store: 'Borderline Plus', kind: 'Outerwear', swatch: '#121012', art: 'moto', styles: ['street'] },
+        { id: 'item-12', name: 'Oversized Bat-Print Tee', price: 45, store: 'Borderline Plus', kind: 'Tee', swatch: '#2B2B2B', art: 'tee', styles: ['street'] },
+        { id: 'item-13', name: 'Layered Silver Chains', price: 60, store: 'Borderline Plus', kind: 'Jewellery', swatch: '#B8B8B8', art: 'chains', styles: ['street'] },
+        { id: 'item-14', name: 'Slim Black Denim', price: 110, store: 'Borderline Plus', kind: 'Trousers', swatch: '#17181C', art: 'denim', styles: ['street'] },
+        { id: 'item-15', name: 'Silk Jacquard Bow Tie', price: 70, store: 'Holt Renfrew', kind: 'Neckwear', swatch: '#6E1022', art: 'bowtie', styles: ['maximal'] },
+        { id: 'item-16', name: 'Structured Wool Cape', price: 520, store: 'Borderline Plus', kind: 'Outerwear', swatch: '#222225', art: 'woolcape', styles: ['minimal'] },
       ].map((item) => ({ ...item, quantity: 1, checked: false }));
+
+      // Garment illustrations, drawn on a 64×80 grid: `body` is filled with the fabric colour,
+      // `detail` adds seams, lapels and folds, `dots` are buttons. `metal` strokes in the swatch colour.
+      const ART = {
+        cape: {
+          body: 'M23 12 Q32 9 41 12 L46 20 L56 70 Q32 77 8 70 L18 20 Z',
+          detail: 'M19 17 Q32 3 45 17 M32 12 V73 M18 20 Q32 26 46 20',
+        },
+        woolcape: {
+          body: 'M24 10 H40 L50 18 L54 72 H10 L14 18 Z',
+          detail: 'M24 10 L23 4 H41 L40 10 M32 10 V72 M14 30 H50',
+          dots: [[36, 20], [36, 30], [36, 40]],
+        },
+        cravat: {
+          body: 'M27 12 H37 L39 20 H25 Z M25 20 Q18 42 29 62 L32 56 L35 62 Q46 42 39 20 Z',
+          detail: 'M27 26 Q32 34 37 26 M29 38 Q32 46 35 38 M44 64 L52 58 L56 66 L48 72 Z',
+        },
+        bowtie: {
+          body: 'M29 33 L11 23 Q7 40 11 57 L29 47 Z M35 33 L53 23 Q57 40 53 57 L35 47 Z M28 32 H36 V48 H28 Z',
+          detail: 'M17 31 L22 40 L17 49 M47 31 L42 40 L47 49',
+        },
+        shirt: {
+          body: 'M24 10 L32 16 L40 10 L52 16 L60 40 L52 43 L48 30 V72 H16 V30 L12 43 L4 40 L12 16 Z',
+          detail: 'M24 10 L27 22 L32 16 L37 22 L40 10 M32 16 V72',
+          dots: [[32, 30], [32, 42], [32, 54], [32, 66]],
+        },
+        tee: {
+          body: 'M22 10 Q32 18 42 10 L56 18 L60 30 L50 32 L48 26 V72 H16 V26 L14 32 L4 30 L8 18 Z',
+          detail: 'M22 10 Q32 18 42 10 M23 42 Q27 37 32 41 Q37 37 41 42 Q36 44 32 49 Q28 44 23 42 Z',
+        },
+        turtleneck: {
+          body: 'M25 3 H39 V12 L52 16 L60 70 L52 71 L48 30 V72 H16 V30 L12 71 L4 70 L12 16 L25 12 Z',
+          detail: 'M25 7 H39 M25 11 H39 M16 67 H48 M5 66 H12 M52 66 H59',
+        },
+        trousers: {
+          body: 'M18 8 H46 L50 76 H37 L32 30 L27 76 H14 Z',
+          detail: 'M18 14 H46 M32 14 V30 M23 14 Q24 21 19 23 M41 14 Q40 21 45 23 M24 40 L22 74 M40 40 L42 74',
+        },
+        denim: {
+          body: 'M18 8 H46 L50 76 H37 L32 30 L27 76 H14 Z',
+          detail: 'M18 14 H46 M32 14 V30 M20 18 Q25 25 30 18 M34 18 Q39 25 44 18',
+          dots: [[32, 11, 1.2]],
+        },
+        frock: {
+          body: 'M22 8 L32 20 L42 8 L54 16 L58 44 L50 44 L50 76 L36 70 L32 44 L28 70 L14 76 L14 44 L6 44 L10 16 Z',
+          detail: 'M22 8 L27 30 L32 20 L37 30 L42 8 M32 20 V44',
+          dots: [[28, 32], [28, 40], [36, 32], [36, 40]],
+        },
+        overcoat: {
+          body: 'M22 8 L32 18 L42 8 L54 14 L58 58 L50 58 L50 76 H14 L14 58 L6 58 L10 14 Z',
+          detail: 'M22 8 L27 30 L32 18 L37 30 L42 8 M32 18 V76 M19 50 H26 M38 50 H45',
+          dots: [[35, 36], [35, 48], [35, 60]],
+        },
+        blazer: {
+          body: 'M22 8 L32 18 L42 8 L54 14 L58 56 L50 56 L50 64 H14 L14 56 L6 56 L10 14 Z',
+          detail: 'M22 8 L27 34 L32 18 L37 34 L42 8 M32 34 V64 M18 48 H26 M38 48 H46 M41 26 H46',
+          dots: [[32, 42], [32, 52]],
+        },
+        moto: {
+          body: 'M22 8 L32 14 L42 8 L54 14 L58 54 L50 54 L50 60 H14 L14 54 L6 54 L10 14 Z',
+          detail: 'M22 8 L18 22 L30 27 M42 8 L46 22 L34 27 M39 14 L28 60 M14 54 H50 M18 38 H26',
+          dots: [[46, 20, 1.2], [18, 20, 1.2]],
+        },
+        waistcoat: {
+          body: 'M21 8 L32 34 L43 8 L50 12 V62 L40 68 L32 60 L24 68 L14 62 V12 Z',
+          detail: 'M18 44 H26 M38 44 H46',
+          dots: [[32, 40], [32, 47], [32, 54]],
+        },
+        vest: {
+          body: 'M20 8 L32 30 L44 8 L52 14 V72 H12 V14 Z',
+          detail: 'M12 64 H52 M12 68 H52 M20 36 Q22 48 20 60 M26 40 Q24 50 26 60 M38 40 Q40 50 38 60 M44 36 Q42 48 44 60',
+        },
+        chains: {
+          metal: true,
+          detail: 'M14 10 Q32 46 50 10 M12 10 Q32 58 52 10 M10 10 Q32 70 54 10',
+          dots: [[32, 46, 3.5]],
+        },
+        bespoke: {
+          detail: 'M28 18 A4 4 0 1 1 32 22 V26 L56 44 H8 L32 26',
+        },
+      };
+
+      function isLight(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+      }
+
+      function garmentArt(item) {
+        const art = ART[item.art] || ART.bespoke;
+        const fill = item.isCustom ? 'none' : item.swatch;
+        // Seams show in dark ink on pale cloth and in bone on dark cloth
+        const line = !item.isCustom && isLight(item.swatch) ? '#5A4D45' : 'rgba(237, 228, 211, 0.62)';
+        const outline = 'rgba(237, 228, 211, 0.62)';
+        const ink = art.metal ? item.swatch : line;
+        return `<svg viewBox="0 0 64 80" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          ${art.body ? `<path d="${art.body}" fill="${fill}" stroke="${outline}" stroke-width="1.4"/>` : ''}
+          ${art.detail ? `<path d="${art.detail}" stroke="${art.body ? ink : (art.metal ? ink : outline)}" stroke-width="${art.metal ? 2.2 : 1.1}"/>` : ''}
+          ${(art.dots || []).map(([x, y, r = 1.4]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${ink}"/>`).join('')}
+        </svg>`;
+      }
 
       const state = { photo: null, styles: [], storeFilter: 'ALL', showAll: false };
 
@@ -937,6 +1019,19 @@
       $('btn-remove-photo').addEventListener('click', () => {
         showError('');
         setPhoto(null);
+        // Also drop it from the saved profile, or it comes back on the next visit.
+        // The chosen styles stay saved.
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+          if (saved && saved.photo) {
+            if (saved.styles && saved.styles.length) {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, photo: null, savedAt: new Date().toISOString() }));
+            } else {
+              localStorage.removeItem(STORAGE_KEY);
+            }
+            showToast('Photo removed from this browser', 'info');
+          }
+        } catch (err) { /* storage unavailable: nothing was saved */ }
       });
 
       ['dragenter', 'dragover'].forEach((type) =>
@@ -1082,7 +1177,7 @@
             <div class="item ${item.checked ? 'is-on' : ''}">
               <label class="item-main">
                 <input type="checkbox" data-check="${item.id}" ${item.checked ? 'checked' : ''}>
-                <span class="swatch ${item.isCustom ? 'is-bespoke' : ''}" ${item.isCustom ? '' : `style="background:${item.swatch}"`} aria-hidden="true"></span>
+                <span class="garment" aria-hidden="true">${garmentArt(item)}</span>
                 <span class="item-text">
                   <span class="item-name">${name}</span>
                   <span class="item-meta">${esc(item.kind || 'Bespoke')} · ${esc(item.store)}</span>
@@ -1162,23 +1257,24 @@
         return 2 * 6371 * Math.asin(Math.sqrt(h));
       }
 
-      // Visit boutiques nearest-first from the chosen starting point
+      // Shortest way round the boutiques, starting where you are once we know it.
+      // There are at most three stops, so simply try every order.
       function routeOrder(storeKeys) {
-        const left = [...storeKeys];
-        const order = [];
-        const legs = [];
-        let here = origin;
-        let km = 0;
-        while (left.length) {
-          left.sort((a, b) => distanceKm(here, STORES[a]) - distanceKm(here, STORES[b]));
-          const next = left.shift();
-          const leg = distanceKm(here, STORES[next]);
-          km += leg;
-          legs.push(leg);
-          here = STORES[next];
-          order.push(next);
-        }
-        return { order, legs, km };
+        const perms = (arr) => (arr.length <= 1 ? [arr]
+          : arr.flatMap((k, i) => perms([...arr.slice(0, i), ...arr.slice(i + 1)]).map((p) => [k, ...p])));
+        let best = { order: [], legs: [], km: 0 };
+        let bestKm = Infinity;
+        perms(storeKeys).forEach((order) => {
+          let here = origin;
+          const legs = order.map((key) => {
+            const leg = here ? distanceKm(here, STORES[key]) : 0;
+            here = STORES[key];
+            return leg;
+          });
+          const km = legs.reduce((a, b) => a + b, 0);
+          if (km < bestKm) { bestKm = km; best = { order, legs, km }; }
+        });
+        return best;
       }
 
       function currentTrip() {
@@ -1231,19 +1327,24 @@
 
       function renderStops(trip) {
         const n = trip.order.length;
-        $('route-title').textContent = n ? `${STOP_WORDS[n] || `${n} stops`} from ${origin.from}` : STOP_WORDS[0];
-        $('route-sub').textContent = n
-          ? `Shortest hop first, starting ${origin.start}. About ${trip.km.toFixed(1)} km in all.`
-          : `Tick a garment and the route draws itself, starting ${origin.start}.`;
+        const stops = STOP_WORDS[n] || `${n} stops`;
+        $('route-title').textContent = !n ? STOP_WORDS[0] : origin ? `${stops} from where you are` : `${stops} to visit`;
+        $('route-sub').textContent = !n
+          ? 'Tick a garment and the route draws itself from where you are.'
+          : origin
+            ? `The shortest way round, starting where you are. About ${trip.km.toFixed(1)} km in all.`
+            : 'Share your location and the route starts from where you are.';
 
         if (!n) {
           $('stops-list').innerHTML = '<li class="stops-empty">No boutique stops yet. Tick garments to build the route.</li>';
           return;
         }
-        const from = encodeURIComponent(origin.address);
+        // Without an origin, Google Maps starts from the phone's or browser's current location
+        const from = origin ? `&origin=${encodeURIComponent(origin.address)}` : '';
         $('stops-list').innerHTML = trip.order.map((key, idx) => {
           const store = STORES[key];
-          const directions = `https://www.google.com/maps/dir/?api=1&origin=${from}&destination=${encodeURIComponent(store.address)}`;
+          const directions = `https://www.google.com/maps/dir/?api=1${from}&destination=${encodeURIComponent(store.address)}`;
+          const leg = origin || idx > 0 ? `+${trip.legs[idx].toFixed(1)} km` : '';
           const pick = trip.byStore[key].map((i) => esc(i.name) + (i.quantity > 1 ? ` ×${i.quantity}` : '')).join(' · ');
           return `
             <li class="stop">
@@ -1251,12 +1352,12 @@
               <span class="stop-body">
                 <span class="stop-head">
                   <span class="stop-name">${esc(key)}</span>
-                  <span class="stop-leg">+${trip.legs[idx].toFixed(1)} km</span>
+                  <span class="stop-leg">${leg}</span>
                 </span>
                 <span class="stop-meta">${esc(store.address)}</span>
                 <span class="stop-meta">${esc(store.hours)} · <a class="link" href="tel:${store.phone.replace(/\D/g, '')}">${esc(store.phone)}</a></span>
                 <span class="stop-pieces">${pick}</span>
-                <a class="link stop-link no-print" href="${directions}" target="_blank" rel="noopener">Directions from ${origin.kind === 'me' ? 'here' : 'Casa Loma'} ↗</a>
+                <a class="link stop-link no-print" href="${directions}" target="_blank" rel="noopener">Directions ↗</a>
               </span>
             </li>`;
         }).join('');
@@ -1286,12 +1387,9 @@
         }).addTo(map);
 
         Object.entries(STORES).forEach(([key, store]) => {
-          const icon = store.isOrigin
-            ? L.divIcon({ className: '', html: '<span class="pin-origin"></span>', iconSize: [22, 22], iconAnchor: [11, 11] })
-            : storeIcon(0);
-          markers[key] = L.marker([store.lat, store.lng], { icon, title: key })
+          markers[key] = L.marker([store.lat, store.lng], { icon: storeIcon(0), title: key })
             .addTo(map)
-            .bindPopup(`<strong>${esc(store.name)}</strong><br>${esc(store.address)}${store.hours ? `<br>${esc(store.hours)} · ${esc(store.phone)}` : ''}`);
+            .bindPopup(`<strong>${esc(store.name)}</strong><br>${esc(store.address)}<br>${esc(store.hours)} · ${esc(store.phone)}`);
         });
 
         // Re-measure when the layout changes so the route stays framed
@@ -1305,7 +1403,7 @@
         if (!map) return;
         const bounds = routeLine
           ? routeLine.getBounds()
-          : L.latLngBounds([...Object.values(STORES), origin].map((s) => [s.lat, s.lng]));
+          : L.latLngBounds([...Object.values(STORES), ...(origin ? [origin] : [])].map((s) => [s.lat, s.lng]));
         map.fitBounds(bounds, { padding: [48, 48], maxZoom: 15 });
       }
 
@@ -1314,8 +1412,8 @@
         if (routeLine) map.removeLayer(routeLine);
         routeLine = null;
         BOUTIQUES.forEach((key) => markers[key].setIcon(storeIcon(order.indexOf(key) + 1)));
-        if (order.length) {
-          const points = [origin, ...order.map((k) => STORES[k])].map((s) => [s.lat, s.lng]);
+        const points = [...(origin ? [origin] : []), ...order.map((k) => STORES[k])].map((s) => [s.lat, s.lng]);
+        if (points.length > 1) {
           routeLine = L.polyline(points, { color: '#E3596C', weight: 3, opacity: 0.9, dashArray: '6 8', lineCap: 'round' }).addTo(map);
         }
         map.invalidateSize();
@@ -1330,7 +1428,8 @@
         }
         const addr = (k) => encodeURIComponent(STORES[k].address);
         const waypoints = order.length > 1 ? `&waypoints=${order.slice(0, -1).map(addr).join('|')}` : '';
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.address)}&destination=${addr(order[order.length - 1])}${waypoints}&travelmode=driving`;
+        const from = origin ? `&origin=${encodeURIComponent(origin.address)}` : ''; // none = Google uses your current location
+        const url = `https://www.google.com/maps/dir/?api=1${from}&destination=${addr(order[order.length - 1])}${waypoints}&travelmode=driving`;
         window.open(url, '_blank', 'noopener');
       });
 
@@ -1344,7 +1443,7 @@
           "COUNT DRACULA'S TORONTO SHOPPING MANIFEST",
           '==========================================',
           `Styles: ${styleNames().join(', ') || 'not chosen'}`,
-          origin.kind === 'me' ? `Start: my location (${origin.address})` : 'Start: Casa Loma (1 Austin Terrace, Toronto, ON)',
+          `Start: ${origin ? `my location (${origin.address})` : 'my current location'}`,
           '',
           'GARMENTS:',
           ...trip.picked.map((i) => `• ${i.name} (x${i.quantity}) - ${money(i.price * i.quantity)} CAD [${i.store}]`),
@@ -1373,41 +1472,32 @@
       $('btn-print').addEventListener('click', () => window.print());
 
       // -------------------------------------------------------------------
-      // Starting point: Casa Loma or "my location"
+      // Starting point: where you are
       // -------------------------------------------------------------------
-      function rememberOrigin(kind) {
-        try { localStorage.setItem(ORIGIN_KEY, kind); } catch (err) { /* storage blocked: just don't remember */ }
-      }
+      const TORONTO = { lat: 43.6532, lng: -79.3832 };
 
       function renderOrigin() {
-        [...$('origin-tabs').querySelectorAll('[data-origin]')].forEach((b) =>
-          b.setAttribute('aria-pressed', b.dataset.origin === origin.kind));
-        $('origin-name').textContent = origin.name;
-        $('origin-meta').textContent = origin.meta;
-        $('origin-mark').classList.toggle('is-me', origin.kind === 'me');
+        $('origin-name').textContent = origin ? 'Your location' : 'Where are you?';
+        $('origin-meta').textContent = origin ? origin.meta : 'Share your location and the route starts from there.';
+        $('origin-mark').classList.toggle('is-me', !!origin);
+        setLocating(false);
 
         if (map) {
           if (meMarker) map.removeLayer(meMarker);
-          meMarker = null;
-          if (origin.kind === 'me') {
-            meMarker = L.marker([origin.lat, origin.lng], {
+          meMarker = origin
+            ? L.marker([origin.lat, origin.lng], {
               icon: L.divIcon({ className: '', html: '<span class="pin-me"></span>', iconSize: [22, 22], iconAnchor: [11, 11] }),
               title: 'You are here',
               zIndexOffset: 1000,
-            }).addTo(map).bindPopup('<strong>You are here</strong>');
-          }
-          // Casa Loma stays on the map as a landmark, dimmed when it is not the start
-          const castle = markers['Casa Loma'] && markers['Casa Loma'].getElement();
-          const pin = castle && castle.querySelector('.pin-origin');
-          if (pin) pin.classList.toggle('is-faded', origin.kind === 'me');
+            }).addTo(map).bindPopup('<strong>You are here</strong>')
+            : null;
         }
         updateCalculations();
       }
 
       function setLocating(on) {
-        const btn = $('origin-tabs').querySelector('[data-origin="me"]');
-        btn.disabled = on;
-        $('origin-me-label').textContent = on ? 'Locating…' : 'My location';
+        $('btn-locate').disabled = on;
+        $('locate-label').textContent = on ? 'Locating…' : origin ? 'Update' : 'Use my location';
       }
 
       function useMyLocation({ quiet = false } = {}) {
@@ -1417,16 +1507,11 @@
         }
         setLocating(true);
         navigator.geolocation.getCurrentPosition((pos) => {
-          setLocating(false);
           const { latitude: lat, longitude: lng, accuracy } = pos.coords;
           const near = accuracy >= 1000 ? `${(accuracy / 1000).toFixed(1)} km` : `${Math.round(accuracy)} m`;
-          origin = {
-            kind: 'me', name: 'Your location', meta: `Accurate to about ${near} · the start`, from: 'where you are', start: 'where you are',
-            lat, lng, address: `${lat.toFixed(6)},${lng.toFixed(6)}`,
-          };
-          rememberOrigin('me');
+          origin = { meta: `Accurate to about ${near} · the start`, lat, lng, address: `${lat.toFixed(6)},${lng.toFixed(6)}` };
           renderOrigin();
-          const away = distanceKm(origin, CASA);
+          const away = distanceKm(origin, TORONTO);
           if (away > 50) {
             showToast(`You are about ${Math.round(away).toLocaleString('en-CA')} km from Toronto. The route still starts from you.`, 'info');
           } else if (!quiet) {
@@ -1436,26 +1521,13 @@
           setLocating(false);
           if (!quiet) {
             showToast(err.code === err.PERMISSION_DENIED
-              ? 'Location access is blocked. Allow it in the browser to start from where you are.'
-              : 'Could not find your location. Starting from Casa Loma.', 'warning');
+              ? 'Location access is blocked. Allow it in the browser so the route can start from where you are.'
+              : 'Could not find your location. Try again in a moment.', 'warning');
           }
-          origin = CASA;
-          rememberOrigin('casa');
-          renderOrigin();
         }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
       }
 
-      $('origin-tabs').addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-origin]');
-        if (!btn || btn.disabled) return;
-        if (btn.dataset.origin === 'me') {
-          useMyLocation();
-        } else {
-          origin = CASA;
-          rememberOrigin('casa');
-          renderOrigin();
-        }
-      });
+      $('btn-locate').addEventListener('click', () => useMyLocation());
 
       // -------------------------------------------------------------------
       // Bespoke garment modal
@@ -1710,6 +1782,7 @@
       // -------------------------------------------------------------------
       function restore() {
         try {
+          localStorage.removeItem('dracucloth-origin'); // left over from the old Casa Loma / My location switch
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
           if (saved) {
             state.styles = (saved.styles || []).filter((id) => STYLES.some((s) => s.id === id)).slice(0, MAX_STYLES);
@@ -1725,14 +1798,12 @@
       initMap();
       applyRecommendations();
 
-      // Start from "my location" again if they chose it before and the browser still allows it
-      try {
-        if (localStorage.getItem(ORIGIN_KEY) === 'me' && navigator.permissions) {
-          navigator.permissions.query({ name: 'geolocation' })
-            .then((p) => { if (p.state === 'granted') useMyLocation({ quiet: true }); })
-            .catch(() => {});
-        }
-      } catch (err) { /* storage unavailable: start from Casa Loma */ }
+      // Locate straight away when the browser already allows it; otherwise wait for "Use my location"
+      if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' })
+          .then((p) => { if (p.state === 'granted') useMyLocation({ quiet: true }); })
+          .catch(() => {});
+      }
     })();
   </script>
 </body>
