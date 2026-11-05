@@ -15,30 +15,61 @@ import json
 import tempfile
 import os
 import urllib.request
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from websocket import WebSocketApp
 
 from . import outfit
 
+# Tripo's CDN answers 403 to urllib's default "Python-urllib" User-Agent
+USER_AGENT = "Mozilla/5.0 (Blender WS Auto Import)"
 
-def download_file(url: str) -> str:
-    """Download a file to a temp path and return the file path."""
-    # Parse URL to get path component (before query parameters)
+
+def _fetch(url: str, path: str):
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=120) as resp, open(path, "wb") as f:
+        while chunk := resp.read(1 << 16):
+            f.write(chunk)
+
+
+def proxy_url(ws_url: str, url: str) -> str:
+    """The relay server's /proxy-model for this URL (wss://host/ws -> https://host/proxy-model)."""
+    parsed = urlparse(ws_url)
+    scheme = "https" if parsed.scheme == "wss" else "http"
+    return f"{scheme}://{parsed.netloc}/proxy-model?url={quote(url, safe='')}"
+
+
+def normalize_ws_url(raw: str) -> str:
+    """Accept a pasted site URL too: https://host/ -> wss://host/ws?client=blender."""
+    url = raw.strip()
+    if url.startswith("https://"):
+        url = "wss://" + url[len("https://"):]
+    elif url.startswith("http://"):
+        url = "ws://" + url[len("http://"):]
+    elif "://" not in url:
+        url = "wss://" + url
     parsed = urlparse(url)
-    path_lower = parsed.path.lower()
-    
-    # Determine file extension from path, not full URL
-    if path_lower.endswith(".glb"):
-        suffix = ".glb"
-    elif path_lower.endswith(".obj"):
-        suffix = ".obj"
-    else:
-        suffix = ".glb"  # Default to GLB
-    
+    if parsed.path in ("", "/"):
+        url = f"{parsed.scheme}://{parsed.netloc}/ws?client=blender"
+    return url
+
+
+def download_file(url: str, ws_url: str = "") -> str:
+    """Download a file to a temp path and return the file path."""
+    # Determine file extension from the path, not the query string
+    path_lower = urlparse(url).path.lower()
+    suffix = ".obj" if path_lower.endswith(".obj") else ".glb"
+
     fd, path = tempfile.mkstemp(suffix=suffix)
     os.close(fd)
-    urllib.request.urlretrieve(url, path)
+    try:
+        _fetch(url, path)
+    except Exception as e:
+        if not ws_url:
+            raise
+        # The relay server can always reach the CDN (the web viewer loads models through it)
+        print(f"[WSImport] Direct download failed ({e}), retrying via the relay server...")
+        _fetch(proxy_url(ws_url, url), path)
     return path
 
 
@@ -46,6 +77,7 @@ class WSImportState:
     def __init__(self):
         self.ws_thread = None
         self.ws_app = None
+        self.ws_url = ""
         self.connected = False
         self.queue = []
         self.garments = []  # last outfit sent from the catalogue; re-applied to new avatars
@@ -53,6 +85,7 @@ class WSImportState:
     def start(self, ws_url: str):
         if self.ws_thread and self.ws_thread.is_alive():
             return
+        self.ws_url = ws_url
 
         def on_message(_, message):
             print(f"[WSImport] Received message: {message[:200]}...")
@@ -101,7 +134,7 @@ class WSImportState:
         print(f"[WSImport] Processing URL: {url[:80]}...")
         try:
             print(f"[WSImport] Downloading from URL...")
-            path = download_file(url)
+            path = download_file(url, self.ws_url)
             print(f"[WSImport] Downloaded to: {path}")
             if path.lower().endswith(".glb"):
                 print(f"[WSImport] Importing GLB...")
@@ -161,8 +194,11 @@ class WSImportOperator(bpy.types.Operator):
             state.stop()
             self.report({"INFO"}, "WebSocket import stopped")
         else:
-            state.start(prefs.ws_url)
-            self.report({"INFO"}, f"Connecting to {prefs.ws_url}")
+            ws_url = normalize_ws_url(prefs.ws_url)
+            if ws_url != prefs.ws_url:
+                prefs.ws_url = ws_url
+            state.start(ws_url)
+            self.report({"INFO"}, f"Connecting to {ws_url}")
         return {"FINISHED"}
 
 
