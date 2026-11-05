@@ -47,6 +47,13 @@ ngrok gives you a URL like `https://abc123.ngrok-free.app`. You'll use it for bo
 ### 3. Connect Blender
 
 1. **Edit → Preferences → Add-ons → Install**, pick `ws_import_addon.zip`, enable it
+
+   If enabling fails with `No module named 'websocket'`, Blender's bundled Python is missing `websocket-client`. Install it into your Blender user scripts folder (adjust the version numbers to your Blender), then restart Blender:
+
+   ```
+   "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" -m pip install --target "%APPDATA%\Blender Foundation\Blender\5.2\scripts\modules" websocket-client==1.7.0
+   ```
+
 2. Press `N` in the 3D viewport → **WS Import** tab
 3. Paste your ngrok URL, but swap `https` for `wss` and add `/ws?client=blender`:
 
