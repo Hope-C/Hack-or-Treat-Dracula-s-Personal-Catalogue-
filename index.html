@@ -1,583 +1,731 @@
 <!DOCTYPE html>
-<html lang="en" class="dark scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dracula's Personal Catalogue</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Cinzel, Playfair Display, Plus Jakarta Sans & JetBrains Mono -->
+  <title>DracuCloth · Dracula's Personal Catalogue</title>
+  <!-- Fonts: Bodoni Moda (display) and Manrope (text) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Leaflet for the Toronto boutique map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- model-viewer for the 3D try-on result -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            display: ['Cinzel', 'serif'],
-            serif: ['Playfair Display', 'serif'],
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            velvet: { 950: '#08060a', 900: '#110b15', 800: '#1b1122', 700: '#281833' },
-            gold: { 200: '#f9ebb2', 300: '#ebd17c', 400: '#d4af37', 500: '#b89225', 600: '#8f6f17' },
-            crimson: { 400: '#e12d4b', 500: '#b81d38', 600: '#9e1b32', 700: '#751123', 900: '#3c0711' }
-          }
-        }
-      }
-    };
-  </script>
-
   <style>
+    :root {
+      --ink: #0D0A0B;
+      --panel: #151112;
+      --panel-2: #1A1415;
+      --glass: #1E1819;
+      --line: #2E2627;
+      --line-2: #3A3132;
+      --line-3: #5A4D45;
+      --bone: #EDE4D3;
+      --bone-2: #C4B9A8;
+      --muted: #A69B8C;
+      --faint: #7E7366;
+      --accent: #A3182F;
+      --accent-hi: #BA2039;
+      --accent-text: #E3596C;
+      --on-accent: #F6EEE1;
+      --brass: #C9A96B;
+      --serif: 'Bodoni Moda', Georgia, 'Times New Roman', serif;
+      --sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --header-h: 72px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 16px); }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     body {
-      background-color: #08060a;
-      color: #f1ebd8;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      background: var(--ink);
+      color: var(--bone);
+      font: 400 16px/1.5 var(--sans);
+      -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
+    ::selection { background: var(--accent); color: var(--on-accent); }
+    a { color: inherit; }
+    button, input, select { font: inherit; color: inherit; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+    input[type="checkbox"] { accent-color: var(--accent); width: 20px; height: 20px; margin: 0; flex: none; cursor: pointer; }
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+    .num { font-variant-numeric: tabular-nums; }
+    .muted { color: var(--muted); }
+    .link { color: var(--bone); text-underline-offset: 3px; }
+    .link:hover { color: var(--accent-text); }
 
-    /* Damask Gothic Wallpaper Pattern Overlay */
-    .gothic-wallpaper {
-      background-color: #08060a;
-      background-image:
-        radial-gradient(circle at 50% 0%, rgba(158, 27, 50, 0.16) 0%, transparent 55%),
-        radial-gradient(circle at 85% 40%, rgba(212, 175, 55, 0.08) 0%, transparent 45%),
-        radial-gradient(circle at 15% 75%, rgba(158, 27, 50, 0.12) 0%, transparent 50%),
-        repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.02) 0px, rgba(212, 175, 55, 0.02) 1px, transparent 1px, transparent 24px),
-        repeating-linear-gradient(-45deg, rgba(212, 175, 55, 0.02) 0px, rgba(212, 175, 55, 0.02) 1px, transparent 1px, transparent 24px);
-    }
+    /* ---------- Type ---------- */
+    .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); }
+    .roman { font-family: var(--serif); color: var(--brass); }
+    .h1 { margin: 0; font-family: var(--serif); font-weight: 500; font-size: clamp(48px, 7vw, 88px); line-height: 0.98; letter-spacing: -0.02em; }
+    .h1 em { color: var(--accent-text); font-weight: 400; }
+    .h2 { margin: 0; font-family: var(--serif); font-weight: 500; font-size: clamp(34px, 4.6vw, 56px); line-height: 1.04; letter-spacing: -0.015em; }
+    .h3 { margin: 0; font-family: var(--serif); font-weight: 500; font-size: 30px; line-height: 1.1; }
+    .lede { margin: 0; font-size: 17px; color: var(--bone-2); max-width: 620px; }
 
-    /* Ornate Gothic Card Frame */
-    .gothic-card {
-      background: linear-gradient(160deg, rgba(27, 17, 34, 0.9) 0%, rgba(12, 8, 16, 0.96) 100%);
-      border: 1px solid rgba(212, 175, 55, 0.28);
-      box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.85), inset 0 1px 0 0 rgba(249, 235, 178, 0.12);
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 20px; border-radius: 999px;
+      border: 1px solid transparent; background: transparent;
+      font-weight: 600; font-size: 14px; line-height: 1; white-space: nowrap;
+      text-decoration: none; cursor: pointer;
+      transition: background-color .15s, border-color .15s, color .15s;
     }
+    .btn svg { flex: none; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-accent { background: var(--accent); color: var(--on-accent); }
+    .btn-accent:not(:disabled):hover { background: var(--accent-hi); }
+    .btn-light { background: var(--bone); color: var(--ink); font-weight: 700; }
+    .btn-light:not(:disabled):hover { background: #FFF8EC; }
+    .btn-outline { border-color: var(--line-3); }
+    .btn-outline:not(:disabled):hover { border-color: var(--bone); }
+    .btn-ghost { border-color: var(--line-2); }
+    .btn-ghost:not(:disabled):hover { border-color: var(--line-3); background: var(--panel-2); }
+    .btn-dashed { border: 1px dashed var(--line-3); }
+    .btn-dashed:hover { border-color: var(--brass); }
+    .btn-lg { min-height: 52px; font-size: 15px; font-weight: 700; }
+    .btn-block { width: 100%; }
+    .btn-text { background: none; border: 0; padding: 8px 0; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .btn-text:hover { color: var(--accent-text); }
+    .icon-btn { width: 44px; height: 44px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--line-2); background: transparent; cursor: pointer; }
+    .icon-btn:hover { border-color: var(--bone); }
 
-    /* Gilded Mirror Arch Frame */
-    .mirror-arch-frame {
-      background: radial-gradient(ellipse at 50% 35%, #1d1526 0%, #09060d 75%, #050307 100%);
-      border: 3px solid #d4af37;
-      box-shadow:
-        0 0 0 6px #160f1d,
-        0 0 0 8px rgba(212, 175, 55, 0.45),
-        0 25px 60px rgba(0, 0, 0, 0.95),
-        inset 0 0 50px rgba(0, 0, 0, 0.9);
-      border-top-left-radius: 180px;
-      border-top-right-radius: 180px;
-      border-bottom-left-radius: 20px;
-      border-bottom-right-radius: 20px;
-    }
-
-    .text-gold-gradient {
-      background: linear-gradient(to right, #f9ebb2, #d4af37, #ebd17c, #b89225);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* Drop zone highlight while dragging a file over it */
-    .dropzone.is-dragging {
-      border-color: #ebd17c;
-      background: rgba(212, 175, 55, 0.08);
-    }
-
-    /* Selected style card */
-    .style-card[aria-pressed="true"] {
-      border-color: #ebd17c;
-      box-shadow: 0 0 0 1px #ebd17c, 0 18px 40px -16px rgba(158, 27, 50, 0.55);
-    }
-    .style-card[aria-pressed="true"] .style-check {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .style-card[disabled] {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    /* Leaflet map in midnight colours */
-    .leaflet-container {
-      font-family: 'Plus Jakarta Sans', sans-serif !important;
-      border-radius: 0.75rem;
-      background: #110b15;
-    }
-    .leaflet-tile {
-      filter: brightness(0.7) invert(1) contrast(1.2) hue-rotate(200deg) saturate(0.3);
-    }
-
-    .bat-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 0;
+    /* ---------- Header ---------- */
+    .site-header { position: sticky; top: 0; z-index: 1000; background: rgba(13, 10, 11, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    .site-header .wrap { min-height: var(--header-h); display: flex; align-items: center; justify-content: space-between; gap: 12px 32px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+    .brand { display: flex; align-items: baseline; gap: 14px; text-decoration: none; min-width: 0; }
+    .brand-mark { font-family: var(--serif); font-style: italic; font-size: 28px; font-weight: 500; letter-spacing: -0.01em; }
+    .brand-sub { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .chapters { display: flex; flex-wrap: wrap; gap: 4px 28px; font-size: 14px; }
+    .chapters a { text-decoration: none; padding: 10px 0; position: relative; }
+    .chapters a:hover { color: var(--accent-text); }
+    .chapters .roman { margin-right: 6px; }
+    .chapters a.is-done::after { content: ''; position: absolute; right: -10px; top: 12px; width: 5px; height: 5px; border-radius: 50%; background: var(--brass); }
+    .ledger-pill { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: auto; border: 1px solid var(--line-2); border-radius: 50%; text-decoration: none; }
+    .ledger-pill:hover { border-color: var(--bone); }
+    /* Desktop header is just the wordmark and the ledger; the chapter chips return on phones */
+    @media (min-width: 761px) { .chapters { display: none; } }
+    @media (max-width: 1080px) { .brand-sub { display: none; } }
+    @media (max-width: 760px) {
+      .chapters { order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; }
+      .chapters::-webkit-scrollbar { display: none; }
+      .chapters a { flex: none; padding: 7px 14px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 13px; font-weight: 600; }
+      .chapters a.is-done::after { right: 6px; top: 6px; }
+      .ledger-pill { display: none; }
     }
 
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #08060a; }
-    ::-webkit-scrollbar-thumb { background: #281833; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+    /* ---------- Sections ---------- */
+    .chapter { border-top: 1px solid var(--line); }
+    .chapter > .wrap { padding-top: 88px; padding-bottom: 96px; display: flex; flex-direction: column; gap: 40px; }
+    .chapter-head { display: flex; flex-direction: column; gap: 14px; }
+    .chapter-head-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; }
+    @media (max-width: 640px) { .chapter > .wrap { padding-top: 56px; padding-bottom: 64px; gap: 28px; } }
 
+    /* ---------- I · Reflection ---------- */
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); gap: 64px; align-items: center; padding-top: 72px; padding-bottom: 96px; }
+    .hero-copy { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+    .progress { list-style: none; margin: 8px 0 0; padding: 0; max-width: 520px; border-top: 1px solid var(--line); }
+    .progress li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .progress-label { display: flex; gap: 14px; align-items: baseline; }
+    .progress-label .roman { width: 24px; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 40px; padding-bottom: 64px; }
+      .mirror-fig { order: 2; }
+    }
+
+    .mirror-fig { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; max-width: 420px; justify-self: center; }
+    .mirror { width: 100%; padding: 14px; border: 1px solid var(--line-3); border-radius: 50% 50% 10px 10px / 37.5% 37.5% 10px 10px; }
+    .mirror-glass { position: relative; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 50% 50% 4px 4px / 37.5% 37.5% 4px 4px; background: radial-gradient(ellipse at 50% 30%, var(--glass) 0%, #110D0E 70%); }
+    .dropzone { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px 24px; text-align: center; border: 1px dashed #4A3F3A; border-radius: inherit; transition: border-color .15s, background-color .15s; }
+    .mirror-glass.is-dragging .dropzone { border-color: var(--brass); background: rgba(201, 169, 107, 0.08); }
+    .dropzone-title { font-family: var(--serif); font-style: italic; font-size: 28px; }
+    .dropzone-hint { font-size: 14px; color: var(--muted); max-width: 240px; }
+    .dropzone-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .mirror-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .mirror-caption { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; font-size: 13px; color: var(--muted); text-align: center; }
+    .photo-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .photo-name { width: 100%; text-align: center; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .alert { margin: 0; width: 100%; font-size: 14px; color: var(--accent-text); border: 1px solid rgba(227, 89, 108, 0.4); background: rgba(163, 24, 47, 0.12); border-radius: 6px; padding: 10px 14px; }
+
+    /* ---------- II · Taste ---------- */
+    .style-count { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--bone-2); }
+    .dots { display: flex; gap: 6px; }
+    .dots span { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--brass); }
+    .dots span.on { background: var(--brass); }
+    .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .style-card { display: flex; flex-direction: column; text-align: left; padding: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; cursor: pointer; transition: border-color .15s, opacity .15s, transform .15s; }
+    .style-card:not(:disabled):hover { border-color: var(--line-3); }
+    .style-card[aria-pressed="true"] { border-color: var(--bone); }
+    .style-card:disabled { opacity: 0.45; cursor: not-allowed; }
+    .style-swatches { display: flex; height: 104px; width: 100%; }
+    .style-swatches span:nth-child(1) { flex: 3; }
+    .style-swatches span:nth-child(2) { flex: 2; }
+    .style-swatches span:nth-child(3), .style-swatches span:nth-child(4) { flex: 1; }
+    .style-body { display: flex; flex-direction: column; gap: 10px; padding: 20px 22px 24px; flex: 1; }
+    .style-top { display: flex; align-items: center; justify-content: space-between; min-height: 24px; }
+    .style-num { font-family: var(--serif); font-size: 15px; color: var(--brass); }
+    .chosen-badge { display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-accent); background: var(--accent); padding: 4px 10px 4px 8px; border-radius: 999px; }
+    .style-card[aria-pressed="true"] .chosen-badge { display: inline-flex; }
+    .style-name { font-family: var(--serif); font-size: 28px; line-height: 1.1; font-weight: 500; }
+    .style-note { font-size: 15px; color: var(--bone-2); }
+    .style-pieces { margin-top: auto; font-size: 13px; color: var(--muted); padding-top: 10px; border-top: 1px solid var(--line); }
+    @media (max-width: 640px) {
+      .style-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; margin: 0 -24px; padding: 0 24px 8px; scrollbar-width: none; }
+      .style-grid::-webkit-scrollbar { display: none; }
+      .style-card { scroll-snap-align: start; }
+      .style-swatches { height: 72px; }
+      .style-name { font-size: 24px; }
+    }
+
+    .profile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+    .profile-who { display: flex; align-items: center; gap: 18px; min-width: 0; flex: 1 1 320px; }
+    .arch-thumb { width: 48px; height: 64px; flex: none; overflow: hidden; border-radius: 24px 24px 3px 3px; border: 1px solid var(--line-3); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-style: italic; color: var(--muted); }
+    .arch-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-title { font-family: var(--serif); font-size: 20px; }
+    .profile-text { font-size: 14px; color: var(--bone-2); }
+    .profile-note { font-size: 13px; color: var(--muted); }
+    .profile-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+    /* ---------- III · Wardrobe ---------- */
+    .shop { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; align-items: start; }
+    @media (max-width: 1000px) { .shop { grid-template-columns: 1fr; } }
+    .catalogue { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+    .search { flex: 1 1 240px; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--panel); }
+    .search:focus-within { border-color: var(--line-3); }
+    .search input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 15px; outline: none; }
+    .search input::placeholder { color: var(--faint); }
+    .segmented { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+    .segmented::-webkit-scrollbar { display: none; }
+    .segmented button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; font-size: 13px; font-weight: 600; color: var(--bone-2); cursor: pointer; }
+    .segmented button:hover { color: var(--bone); }
+    .segmented button[aria-pressed="true"] { background: var(--bone); color: var(--ink); }
+    .check-label { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; color: var(--bone-2); cursor: pointer; }
+
+    .items { border-bottom: 1px solid var(--line); }
+    .item { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 14px 16px; border-top: 1px solid var(--line); transition: background-color .15s; }
+    .item.is-on { background: var(--panel-2); }
+    .item-main { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: 16px; min-height: 52px; cursor: pointer; }
+    .swatch { width: 40px; height: 52px; flex: none; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(237, 228, 211, 0.16); }
+    .swatch.is-bespoke { background: repeating-linear-gradient(135deg, #2A2223 0 6px, #3A3132 6px 12px); }
+    .item-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .item-name { font-size: 16px; font-weight: 600; }
+    .item:not(.is-on) .item-name { color: var(--bone-2); }
+    .item-meta { font-size: 13px; color: var(--muted); }
+    .tag { font-size: 12px; font-weight: 600; color: var(--brass); border: 1px solid #5C4C30; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .item-price { min-width: 96px; text-align: right; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-2); border-radius: 999px; }
+    .stepper button { width: 44px; height: 40px; border: 0; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--bone-2); }
+    .stepper button:hover { color: var(--bone); }
+    .stepper span { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+    .item-remove { color: var(--muted); }
+    .empty { margin: 0; padding: 40px 16px; border-top: 1px solid var(--line); text-align: center; color: var(--muted); }
+    @media (max-width: 560px) {
+      .item { padding: 14px 4px; gap: 10px 14px; }
+      .item-main { flex-basis: 100%; }
+      .item .tag { display: none; } /* the "only his styles" filter already says it */
+      .stepper { order: 1; margin-left: 56px; }
+      .item-price { order: 2; margin-left: auto; min-width: 0; }
+      .item-remove { order: 3; }
+    }
+
+    .ledger { position: sticky; top: calc(var(--header-h) + 24px); display: flex; flex-direction: column; gap: 22px; padding: 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+    @media (max-width: 1000px) { .ledger { position: static; } }
+    .ledger-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .ledger-line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .ledger-line small { display: block; color: var(--muted); font-size: 12px; }
+    .ledger-empty { margin: 0; padding: 12px 0; font-size: 14px; color: var(--muted); }
+    .ledger-sums { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--bone-2); font-variant-numeric: tabular-nums; }
+    .ledger-sums div { display: flex; justify-content: space-between; }
+    .ledger-total { align-items: baseline; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line-2); color: var(--bone); }
+    .ledger-total span:first-child { font-size: 15px; font-weight: 600; }
+    .ledger-total strong { font-family: var(--serif); font-weight: 500; font-size: 40px; line-height: 1; }
+    .budget-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .budget-row label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--bone-2); }
+    .budget-row input { width: 92px; min-height: 36px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .budget-msg { font-size: 14px; font-weight: 600; color: var(--bone-2); text-align: right; }
+    .budget-msg.is-over { color: var(--accent-text); }
+    .meter { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 10px; }
+    .meter div { height: 100%; width: 0; background: var(--brass); border-radius: 999px; transition: width .4s ease, background-color .2s; }
+    .meter div.is-over { background: var(--accent-text); }
+    .ledger-actions { display: flex; flex-direction: column; gap: 10px; }
+    .ledger-actions .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .ledger-actions .row .btn { padding: 0 8px; font-size: 13px; }
+    .fineprint { font-size: 12px; color: var(--muted); }
+
+    /* ---------- IV · Route ---------- */
+    .route { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; align-items: stretch; }
+    @media (max-width: 1000px) { .route { grid-template-columns: 1fr; } }
+    .map-frame { min-height: 440px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #120E0F; }
+    #map { width: 100%; height: 100%; min-height: 440px; }
+    @media (max-width: 640px) { .map-frame, #map { min-height: 320px; } }
+    .itinerary { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    .stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+    .stop { display: flex; gap: 16px; padding: 20px 0; border-top: 1px solid var(--line); }
+    .stop:first-child { padding-top: 0; border-top: 0; }
+    .stop-mark { width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700; }
+    .stop-mark.origin { background: none; }
+    .stop-mark.origin span { width: 14px; height: 14px; background: var(--bone); transform: rotate(45deg); }
+    .stop-mark.origin.is-me span { border-radius: 50%; transform: none; border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(227, 89, 108, 0.25); }
+    .origin-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    .origin-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .segmented button { display: inline-flex; align-items: center; gap: 6px; }
+    .segmented button:disabled { opacity: 0.6; cursor: progress; }
+    .stop-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+    .stop-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .stop-name { font-family: var(--serif); font-size: 20px; }
+    .stop-leg { font-size: 13px; color: var(--bone-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .stop-meta { font-size: 13px; color: var(--muted); }
+    .stop-pieces { font-size: 13px; color: var(--brass); }
+    .stop-link { font-size: 13px; font-weight: 600; }
+    .stops-empty { padding: 20px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+    .itinerary .btn-light { margin-top: auto; }
+
+    /* Leaflet in the house colours */
+    .leaflet-container { font-family: var(--sans) !important; background: #120E0F; }
+    /* OpenStreetMap tiles turned into a warm night map */
+    .leaflet-tile { filter: grayscale(1) invert(1) brightness(0.62) contrast(1.15) sepia(0.3); }
+    .leaflet-bar a, .leaflet-bar a:hover { background: var(--panel); color: var(--bone); border-color: var(--line-2); }
+    .leaflet-control-attribution { background: rgba(13, 10, 11, 0.8) !important; color: var(--muted) !important; }
+    .leaflet-control-attribution a { color: var(--bone-2) !important; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--bone); border: 1px solid var(--line-2); box-shadow: none; }
+    .leaflet-popup-content-wrapper { border-radius: 6px; }
+    .leaflet-popup-content { margin: 12px 16px; font-size: 13px; line-height: 1.5; }
+    .leaflet-popup-content strong { font-family: var(--serif); font-size: 16px; font-weight: 500; }
+    .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+    .pin { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #2A2223; border: 1.5px solid var(--line-3); color: var(--on-accent); font: 700 13px/1 var(--sans); }
+    .pin.on { background: var(--accent); border-color: var(--bone); }
+    .pin-origin { display: block; width: 18px; height: 18px; margin: 2px; background: var(--bone); transform: rotate(45deg); box-shadow: 0 0 0 4px rgba(237, 228, 211, 0.18); }
+    .pin-origin.is-faded { opacity: 0.45; }
+    .pin-me { display: block; width: 18px; height: 18px; margin: 2px; border-radius: 50%; background: var(--bone); border: 4px solid var(--accent); box-shadow: 0 0 0 6px rgba(227, 89, 108, 0.3); }
+
+    /* ---------- Footer ---------- */
+    .site-footer { border-top: 1px solid var(--line); }
+    .site-footer .wrap { padding-top: 32px; padding-bottom: 48px; display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    .site-footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+
+    /* ---------- Phone ledger bar ---------- */
+    .mobile-bar { display: none; }
+    @media (max-width: 1000px) {
+      .mobile-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1050; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--line-2); }
+      body { padding-bottom: 84px; }
+    }
+    .mobile-bar-meta { font-size: 12px; color: var(--muted); line-height: 1.2; }
+    .mobile-bar-total { font-family: var(--serif); font-size: 26px; line-height: 1.1; }
+
+    /* ---------- Modals & toast ---------- */
+    .modal { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(7, 5, 6, 0.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .dialog { width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; padding: 32px 36px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; display: flex; flex-direction: column; gap: 24px; }
+    @media (max-width: 560px) { .dialog { padding: 24px 20px; } }
+    .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+    .dialog-head > div { display: flex; flex-direction: column; gap: 8px; }
+    .dialog-title { margin: 0; font-family: var(--serif); font-weight: 500; font-size: clamp(28px, 4vw, 40px); line-height: 1.05; }
+    .dialog-title em { color: var(--accent-text); font-weight: 400; }
+    .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--bone-2); }
+    .field input, .field select { min-height: 44px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--ink); font-size: 15px; font-weight: 500; color: var(--bone); }
+    .field input:focus, .field select:focus { border-color: var(--line-3); outline: none; }
+    .fields-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .dialog-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { font-size: 13px; padding: 4px 12px; border: 1px solid var(--line-2); border-radius: 999px; }
+    .compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+    @media (max-width: 560px) { .compare { gap: 12px; } }
+    .compare figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .compare .mirror { padding: 8px; width: 100%; max-width: 320px; margin: 0 auto; }
+    .compare .mirror.is-lit { border-color: var(--brass); }
+    .compare .mirror-glass { background: var(--glass); }
+    .compare img, .compare model-viewer { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .compare img { object-fit: cover; }
+    #tryon-after { object-fit: contain; }
+    .compare model-viewer { background: #140F10; }
+    .compare figcaption { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+    .compare figcaption em { font-family: var(--serif); font-size: 16px; color: var(--bone); }
+    .tryon-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; background: radial-gradient(ellipse at 50% 30%, #2A1E20 0%, #140F10 75%); }
+    .tryon-loading span { font-family: var(--serif); font-style: italic; font-size: 20px; }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+    .dialog-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .status { margin: 0; font-size: 14px; color: var(--bone-2); flex: 1 1 260px; }
+    .status.is-error { color: var(--accent-text); }
+
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 1200; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 48px); padding: 14px 20px; background: var(--panel); border: 1px solid var(--line-3); border-radius: 999px; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .25s, transform .25s; }
+    .toast.is-shown { opacity: 1; transform: none; }
+    .toast-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--brass); }
+    .toast-dot.warning { background: var(--accent-text); }
+    .toast-dot.info { background: var(--bone-2); }
+    @media (max-width: 1000px) { .toast { right: 16px; left: 16px; bottom: 96px; justify-content: center; border-radius: 12px; } }
+
+    /* ---------- Print: the shopping manifest ---------- */
     @media print {
-      body { background: #ffffff !important; color: #000000 !important; }
-      .no-print { display: none !important; }
-      .gothic-card { background: #ffffff !important; box-shadow: none !important; border-color: #999 !important; }
+      body { background: #fff; color: #000; padding: 0; }
+      .no-print, .site-header, .hero, #taste, .catalogue, .map-frame, .mobile-bar, .toast, .modal, .site-footer { display: none !important; }
+      .chapter { border: 0; }
+      .chapter > .wrap { padding: 0 0 24px; gap: 16px; }
+      .shop, .route { display: block; }
+      .ledger { position: static; background: #fff; border: 1px solid #999; }
+      .ledger *, .itinerary *, .chapter-head * { color: #000 !important; }
+      .stop-mark { border: 1px solid #000; }
+      .stop-mark.origin span { background: #000; }
     }
   </style>
 </head>
-<body class="gothic-wallpaper min-h-screen flex flex-col selection:bg-crimson-600 selection:text-gold-200">
-
-  <!-- Ambient bat particles -->
-  <canvas id="bat-canvas" class="bat-canvas no-print"></canvas>
+<body>
 
   <!-- ===================================================================== -->
   <!-- HEADER                                                                -->
   <!-- ===================================================================== -->
-  <header class="sticky top-0 z-[1000] border-b border-gold-400/25 bg-velvet-950/90 backdrop-blur-md no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-      <a href="#top" class="flex items-center gap-3 min-w-0">
-        <div class="w-10 h-10 shrink-0 rounded-full bg-crimson-700/40 border border-gold-400/60 flex items-center justify-center">
-          <span class="font-display font-bold text-gold-300 text-lg">D</span>
-        </div>
-        <div class="min-w-0">
-          <span class="font-display text-sm sm:text-base font-bold tracking-wider text-gold-200 block leading-none truncate">
-            DRACULA'S PERSONAL CATALOGUE
-          </span>
-          <span class="font-mono text-[10px] uppercase tracking-widest text-gold-400/80 hidden sm:block">
-            Photo · Style · Toronto shopping
-          </span>
-        </div>
+  <header class="site-header">
+    <div class="wrap">
+      <a href="#top" class="brand">
+        <span class="brand-mark">DracuCloth</span>
+        <span class="brand-sub">Dracula's Personal Catalogue</span>
       </a>
-
-      <nav class="flex items-center gap-1.5 sm:gap-2 font-mono text-[10px] sm:text-[11px] uppercase tracking-widest">
-        <a href="#step-photo" id="pill-photo" class="px-2.5 sm:px-3 py-1.5 rounded-full border border-gold-400/40 text-gold-200 hover:bg-gold-400/10 transition">1<span class="hidden sm:inline"> · Photo</span></a>
-        <a href="#step-style" id="pill-style" class="px-2.5 sm:px-3 py-1.5 rounded-full border border-gold-400/40 text-gold-200 hover:bg-gold-400/10 transition">2<span class="hidden sm:inline"> · Style</span></a>
-        <a href="#step-shop" id="pill-shop" class="px-2.5 sm:px-3 py-1.5 rounded-full border border-gold-400/40 text-gold-200 hover:bg-gold-400/10 transition">3<span class="hidden sm:inline"> · Shop</span></a>
-        <button id="btn-bats" type="button" title="Toggle bats" class="ml-1 w-8 h-8 rounded-full border border-gold-400/30 text-gold-300 hover:bg-gold-400/10 transition" aria-pressed="true">
-          <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-        </button>
+      <nav class="chapters" aria-label="Chapters">
+        <a href="#reflection" id="nav-photo"><span class="roman">I</span>Reflection</a>
+        <a href="#taste" id="nav-style"><span class="roman">II</span>Taste</a>
+        <a href="#wardrobe" id="nav-shop"><span class="roman">III</span>Wardrobe</a>
+        <a href="#route"><span class="roman">IV</span>Route</a>
       </nav>
+      <a href="#wardrobe" class="ledger-pill" aria-label="Go to the ledger" title="The ledger">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+      </a>
     </div>
   </header>
 
-  <main id="top" class="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+  <main id="top">
 
-    <!-- Intro -->
-    <div class="max-w-3xl mb-10 no-print">
-      <span class="font-mono text-[11px] uppercase tracking-[0.25em] text-crimson-400">Mirrors fail him. We don't.</span>
-      <h1 class="font-display text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.12] mt-2">
-        Show us <span class="text-gold-gradient">the Count</span>, learn his taste, then send him shopping.
-      </h1>
-      <p class="font-serif text-lg text-stone-300 mt-4">
-        Upload one front-facing photo of Dracula, pick the styles he loves, and we'll build his
-        Toronto shopping list, budget and route from Casa Loma.
-      </p>
-    </div>
+    <!-- =================================================================== -->
+    <!-- I · THE REFLECTION (front photo)                                    -->
+    <!-- =================================================================== -->
+    <section id="reflection" class="wrap hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <span class="eyebrow">I · The reflection</span>
+        <h1 id="hero-title" class="h1">Mirrors fail him.<br><em>We don't.</em></h1>
+        <p class="lede" style="font-size: 18px; max-width: 520px;">One front-facing photo, up to three styles he loves, and DracuCloth builds his gala wardrobe, his budget and a route through Toronto's boutiques.</p>
+        <ol class="progress no-print">
+          <li><span class="progress-label"><span class="roman">I</span>His photo</span></li>
+          <li><span class="progress-label"><span class="roman">II</span>His taste</span></li>
+          <li><span class="progress-label"><span class="roman">III</span>The wardrobe</span></li>
+        </ol>
+      </div>
 
-    <div class="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-8 items-start no-print">
-
-      <!-- =============================================================== -->
-      <!-- STEP 1 — FRONT PHOTO                                            -->
-      <!-- =============================================================== -->
-      <section id="step-photo" class="gothic-card rounded-2xl p-5 sm:p-7 lg:sticky lg:top-24 scroll-mt-24">
-        <div class="flex items-center justify-between gap-3 mb-5">
-          <div>
-            <span class="font-mono text-[11px] uppercase tracking-widest text-gold-400">Step 1</span>
-            <h2 class="font-display text-xl sm:text-2xl font-bold text-white">Upload his front photo</h2>
-          </div>
-          <span id="photo-status" class="font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded bg-crimson-900/80 text-crimson-300 border border-crimson-400/40">
-            No reflection yet
-          </span>
-        </div>
-
-        <!-- Mirror frame: shows dropzone when empty, the photo when loaded -->
-        <div class="mirror-arch-frame mx-auto w-full max-w-[380px] p-3">
-          <div class="rounded-t-[168px] rounded-b-[14px] overflow-hidden">
-
-            <button id="dropzone" type="button" class="dropzone w-full flex flex-col items-center justify-center text-center gap-3 aspect-[3/4] cursor-pointer border-2 border-dashed border-gold-400/35 rounded-t-[168px] rounded-b-[14px] px-6 transition">
-              <svg viewBox="0 0 120 150" class="w-24 opacity-60" aria-hidden="true">
-                <ellipse cx="60" cy="38" rx="20" ry="25" fill="none" stroke="#d4af37" stroke-width="2" stroke-dasharray="4 4"/>
-                <path d="M40,68 L80,68 L104,80 Q112,84 112,96 L116,150 L4,150 L8,96 Q8,84 16,80 Z" fill="none" stroke="#d4af37" stroke-width="2" stroke-dasharray="4 4"/>
-              </svg>
-              <span class="font-display text-sm font-bold text-gold-200 uppercase tracking-wider">Drop a photo here</span>
-              <span class="text-xs text-stone-400">or tap to choose · JPG, PNG or WebP</span>
-            </button>
-
-            <img id="photo-preview" alt="Uploaded front photo of Dracula" class="hidden w-full aspect-[3/4] object-cover">
-          </div>
-        </div>
-
-        <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/*" class="sr-only">
-
-        <p id="photo-error" class="hidden mt-4 text-sm text-crimson-300 bg-crimson-900/40 border border-crimson-500/40 rounded-lg px-3 py-2" role="alert"></p>
-
-        <div id="photo-actions" class="hidden mt-5 flex flex-wrap items-center justify-center gap-2">
-          <span id="photo-name" class="w-full text-center font-mono text-[11px] text-stone-400 truncate"></span>
-          <button id="btn-replace-photo" type="button" class="px-4 py-2 rounded-xl bg-velvet-800 hover:bg-velvet-700 text-gold-200 border border-gold-400/30 font-mono text-xs transition">
-            Replace photo
-          </button>
-          <button id="btn-remove-photo" type="button" class="px-4 py-2 rounded-xl bg-crimson-900/60 hover:bg-crimson-800/70 text-crimson-200 border border-crimson-400/40 font-mono text-xs transition">
-            Remove
-          </button>
-        </div>
-
-        <ul class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-stone-300">
-          <li class="rounded-lg bg-velvet-950/70 border border-gold-400/15 px-3 py-2"><span class="text-gold-300">Front-facing</span><br>Looking straight at the camera</li>
-          <li class="rounded-lg bg-velvet-950/70 border border-gold-400/15 px-3 py-2"><span class="text-gold-300">Head to waist</span><br>Shoulders fully in frame</li>
-          <li class="rounded-lg bg-velvet-950/70 border border-gold-400/15 px-3 py-2"><span class="text-gold-300">One person</span><br>Plain background is best</li>
-        </ul>
-      </section>
-
-      <!-- =============================================================== -->
-      <!-- STEP 2 — STYLE PREFERENCES                                      -->
-      <!-- =============================================================== -->
-      <section id="step-style" class="gothic-card rounded-2xl p-5 sm:p-7 scroll-mt-24">
-        <div class="flex items-center justify-between gap-3 mb-2">
-          <div>
-            <span class="font-mono text-[11px] uppercase tracking-widest text-gold-400">Step 2</span>
-            <h2 class="font-display text-xl sm:text-2xl font-bold text-white">Pick the styles he likes</h2>
-          </div>
-          <span id="style-count" class="font-mono text-[11px] text-gold-300 shrink-0">0 / 3 chosen</span>
-        </div>
-        <p class="text-sm text-stone-400 mb-6">Choose up to three. Tap again to unselect.</p>
-
-        <div id="style-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-
-        <!-- Summary -->
-        <div class="mt-8 rounded-xl border border-gold-400/30 bg-velvet-950/80 p-4 sm:p-5">
-          <div class="flex items-center gap-4">
-            <div class="w-16 h-20 shrink-0 rounded-t-[32px] rounded-b-md overflow-hidden border border-gold-400/40 bg-velvet-900 flex items-center justify-center">
-              <img id="summary-thumb" alt="" class="hidden w-full h-full object-cover">
-              <span id="summary-thumb-empty" class="font-display text-gold-400/50 text-xl">?</span>
+      <figure class="mirror-fig no-print">
+        <div class="mirror">
+          <div id="mirror-glass" class="mirror-glass">
+            <div id="dropzone" class="dropzone">
+              <svg width="96" height="120" viewBox="0 0 120 150" fill="none" stroke="#5A4D45" stroke-width="1.5" stroke-dasharray="4 5" aria-hidden="true"><ellipse cx="60" cy="40" rx="20" ry="25"/><path d="M40 70h40l24 12q8 4 8 16l4 52H4l4-52q0-12 8-16z"/></svg>
+              <span class="dropzone-title">No reflection yet</span>
+              <span class="dropzone-hint">Drop a JPG, PNG or WebP here, or choose how to capture him.</span>
+              <div class="dropzone-actions">
+                <button id="btn-upload" type="button" class="btn btn-accent">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>
+                  Upload photo
+                </button>
+                <a href="http://localhost:8001" class="btn btn-outline" title="Opens camera-to-blender at localhost:8001">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                  Camera to 3D
+                </a>
+              </div>
             </div>
-            <div class="min-w-0 flex-1">
-              <div class="font-display text-sm font-bold text-gold-200 uppercase tracking-wider">The Count's profile</div>
-              <div id="summary-text" class="text-sm text-stone-300 mt-1">Add a photo and at least one style.</div>
-              <div id="summary-tags" class="flex flex-wrap gap-1.5 mt-2"></div>
-            </div>
+            <img id="photo-preview" alt="Front photo of the Count" class="mirror-photo hidden">
           </div>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button id="btn-save" type="button" disabled class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 enabled:hover:from-gold-400 enabled:hover:to-gold-300 text-velvet-950 font-display font-bold text-xs uppercase tracking-wider shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
-              Save profile
-            </button>
-            <a href="#step-shop" class="px-4 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white border border-gold-400/40 font-display font-bold text-xs uppercase tracking-wider transition">
-              Shop the look <i class="fa-solid fa-arrow-down ml-1"></i>
+        </div>
+        <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/*" class="sr-only" tabindex="-1" aria-hidden="true">
+
+        <p id="photo-error" class="alert hidden" role="alert"></p>
+
+        <div id="photo-actions" class="photo-actions hidden">
+          <span id="photo-name" class="photo-name"></span>
+          <button id="btn-replace-photo" type="button" class="btn btn-ghost">Replace photo</button>
+          <a href="http://localhost:8001" class="btn btn-ghost">Camera to 3D</a>
+          <button id="btn-remove-photo" type="button" class="btn btn-ghost">Remove</button>
+        </div>
+
+        <figcaption class="mirror-caption">
+          <span>Front-facing</span><span aria-hidden="true">·</span><span>Head to waist</span><span aria-hidden="true">·</span><span>One person, plain background</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- II · HIS TASTE                                                      -->
+    <!-- =================================================================== -->
+    <section id="taste" class="chapter no-print" aria-labelledby="taste-title">
+      <div class="wrap">
+        <div class="chapter-head-row">
+          <div class="chapter-head">
+            <span class="eyebrow">II · His taste</span>
+            <h2 id="taste-title" class="h2">Choose up to three styles</h2>
+          </div>
+          <div class="style-count">
+            <span id="style-dots" class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span id="style-count">0 of 3 chosen</span>
+          </div>
+        </div>
+
+        <div id="style-grid" class="style-grid"></div>
+
+        <div class="profile">
+          <div class="profile-who">
+            <span class="arch-thumb">
+              <img id="summary-thumb" alt="" class="hidden">
+              <span id="summary-thumb-empty">?</span>
+            </span>
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <span class="profile-title">The Count's profile</span>
+              <span id="summary-text" class="profile-text">No styles chosen yet</span>
+              <span id="summary-note" class="profile-note">Still needed: a front photo and at least one style.</span>
+            </span>
+          </div>
+          <div class="profile-actions">
+            <span id="save-note" class="profile-note" role="status"></span>
+            <button id="btn-save" type="button" class="btn btn-outline" disabled>Save profile</button>
+            <a href="#wardrobe" class="btn btn-light">
+              Shop the look
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
             </a>
-            <span id="save-note" class="font-mono text-[11px] text-stone-400"></span>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- STEP 3 — TORONTO SHOPPING & ROUTE                                   -->
-    <!-- =================================================================== -->
-    <section id="step-shop" class="mt-14 scroll-mt-24">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-16 shrink-0 rounded-t-[28px] rounded-b-md overflow-hidden border border-gold-400/40 bg-velvet-900 flex items-center justify-center no-print">
-            <img id="shop-thumb" alt="" class="hidden w-full h-full object-cover">
-            <span id="shop-thumb-empty" class="text-2xl">🦇</span>
-          </div>
-          <div>
-            <span class="font-mono text-[11px] uppercase tracking-widest text-gold-400">Step 3</span>
-            <h2 class="font-display text-2xl sm:text-3xl font-bold text-white">Shop the look in Toronto</h2>
-            <p id="shop-subtitle" class="text-sm text-stone-400 mt-1">Pick a style in Step 2 to get recommendations, or tick garments yourself.</p>
-          </div>
-        </div>
-        <button id="btn-print" type="button" class="self-start md:self-auto px-4 py-2 rounded-xl bg-velvet-800 hover:bg-velvet-700 text-gold-200 border border-gold-400/30 font-mono text-xs transition no-print">
-          <i class="fa-solid fa-print mr-1"></i> Print manifest
-        </button>
-      </div>
-
-      <!-- Quick metrics -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="gothic-card rounded-2xl p-4 flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-crimson-900/60 text-crimson-300 flex items-center justify-center"><i class="fa-solid fa-shirt"></i></div>
-          <div>
-            <div class="font-mono text-[10px] uppercase tracking-widest text-stone-400">Items picked</div>
-            <div id="stat-items" class="text-2xl font-bold text-white">0</div>
-          </div>
-        </div>
-        <div class="gothic-card rounded-2xl p-4 flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-gold-400/15 text-gold-300 flex items-center justify-center"><i class="fa-solid fa-store"></i></div>
-          <div>
-            <div class="font-mono text-[10px] uppercase tracking-widest text-stone-400">Boutiques</div>
-            <div id="stat-stores" class="text-2xl font-bold text-white">0</div>
-          </div>
-        </div>
-        <div class="gothic-card rounded-2xl p-4 flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-emerald-900/50 text-emerald-300 flex items-center justify-center"><i class="fa-solid fa-calculator"></i></div>
-          <div>
-            <div class="font-mono text-[10px] uppercase tracking-widest text-stone-400">Total (HST)</div>
-            <div id="stat-total" class="text-2xl font-bold text-gold-300">$0.00</div>
-          </div>
-        </div>
-        <div class="gothic-card rounded-2xl p-4 flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-sky-900/40 text-sky-300 flex items-center justify-center"><i class="fa-solid fa-route"></i></div>
-          <div>
-            <div class="font-mono text-[10px] uppercase tracking-widest text-stone-400">Est. route</div>
-            <div id="stat-route" class="text-2xl font-bold text-white">0.0 km</div>
           </div>
         </div>
       </div>
+    </section>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- =================================================================== -->
+    <!-- III · THE WARDROBE                                                  -->
+    <!-- =================================================================== -->
+    <section id="wardrobe" class="chapter" aria-labelledby="shop-title">
+      <div class="wrap">
+        <div class="chapter-head">
+          <span class="eyebrow">III · The wardrobe</span>
+          <h2 id="shop-title" class="h2">Shop the look in Toronto</h2>
+          <p id="shop-subtitle" class="lede">Pick a style in Chapter II to get recommendations, or tick garments yourself.</p>
+        </div>
 
-        <!-- LEFT: checklist + costs -->
-        <div class="lg:col-span-7 space-y-8">
-
-          <!-- Wardrobe checklist -->
-          <div class="gothic-card rounded-2xl p-5 sm:p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gold-400/15">
-              <div>
-                <h3 class="font-display text-lg sm:text-xl font-bold text-gold-200">Recommended wardrobe</h3>
-                <p class="text-xs text-stone-400">Ticked garments are added to the cost table and route.</p>
-              </div>
-              <div class="flex flex-wrap gap-2 no-print">
-                <button id="btn-tryon" type="button" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-400 hover:to-gold-300 text-velvet-950 shadow-lg transition flex items-center gap-1.5">
-                  <i class="fa-solid fa-person-half-dress"></i> Try it on
-                </button>
-                <button id="btn-dress-blender" type="button" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white border border-gold-400/40 transition flex items-center gap-1.5">
-                  <i class="fa-solid fa-cube"></i> Dress in Blender
-                </button>
-                <button id="btn-open-custom" type="button" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-velvet-800 hover:bg-crimson-600 text-gold-200 border border-gold-400/30 transition flex items-center gap-1.5">
-                  <i class="fa-solid fa-plus"></i> Add custom garment
-                </button>
-              </div>
-            </div>
-
-            <div class="mt-4 flex flex-col sm:flex-row gap-3 no-print">
-              <div class="relative flex-1">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-500 text-xs"></i>
-                <input type="text" id="search-input" placeholder="Search cape, cravat, shirt..." class="w-full pl-9 pr-4 py-2 text-sm bg-velvet-950 border border-gold-400/30 rounded-xl focus:outline-none focus:border-gold-300 text-gold-200 placeholder:text-stone-500">
-              </div>
-              <div id="filter-tabs" class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0"></div>
-            </div>
-
-            <label id="show-all-wrap" class="hidden mt-3 items-center gap-2 text-xs text-stone-400 cursor-pointer no-print">
-              <input type="checkbox" id="show-all" class="w-4 h-4 accent-[#d4af37]">
-              Also show garments outside his chosen styles
-            </label>
-
-            <div id="items-list" class="mt-4 space-y-3 max-h-[480px] overflow-y-auto pr-1"></div>
-          </div>
-
-          <!-- Budget & Ontario tax -->
-          <div class="gothic-card rounded-2xl p-5 sm:p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gold-400/15">
-              <div>
-                <h3 class="font-display text-lg sm:text-xl font-bold text-gold-200">Cost &amp; Ontario tax</h3>
-                <p class="text-xs text-stone-400">Estimated Toronto prices in CAD, with 13% HST.</p>
-              </div>
-              <label class="flex items-center gap-2 bg-velvet-950 px-3 py-1.5 rounded-xl border border-gold-400/30">
-                <span class="text-xs text-stone-400 font-semibold">Max budget: $</span>
-                <input type="number" id="budget-input" value="1800" min="0" step="50" class="w-20 bg-transparent text-sm font-bold text-white focus:outline-none">
+        <div class="shop">
+          <div class="catalogue">
+            <div class="toolbar">
+              <label class="search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A69B8C" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+                <span class="sr-only">Search garments</span>
+                <input type="search" id="search-input" placeholder="Search cape, cravat, shirt…" autocomplete="off">
               </label>
+              <div id="filter-tabs" class="segmented" role="group" aria-label="Boutique"></div>
             </div>
 
-            <div class="mt-4">
-              <div class="flex justify-between text-xs font-semibold mb-1.5">
-                <span class="text-stone-400">Budget used</span>
-                <span id="budget-percent" class="text-white font-bold">0%</span>
-              </div>
-              <div class="w-full h-3 bg-velvet-950 rounded-full overflow-hidden p-0.5 border border-gold-400/20">
-                <div id="budget-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-              <div id="budget-notice" class="text-xs mt-2 font-medium flex items-center gap-1.5 text-emerald-400"></div>
+            <div class="toolbar">
+              <label id="only-taste-wrap" class="check-label hidden">
+                <input type="checkbox" id="only-taste" checked>
+                Only pieces that suit his styles
+              </label>
+              <button id="btn-open-custom" type="button" class="btn btn-dashed" style="margin-left: auto;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add a bespoke garment
+              </button>
             </div>
 
-            <div class="mt-6 overflow-x-auto">
-              <table class="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr class="font-mono text-[10px] text-stone-400 border-b border-gold-400/15 uppercase tracking-widest">
-                    <th class="py-2 px-1">Item</th>
-                    <th class="py-2 px-1">Boutique</th>
-                    <th class="py-2 px-1 text-center">Qty</th>
-                    <th class="py-2 px-1 text-right">Unit</th>
-                    <th class="py-2 px-1 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody id="cost-table" class="divide-y divide-gold-400/10"></tbody>
-              </table>
-            </div>
-
-            <div class="mt-6 bg-velvet-950/90 rounded-xl p-4 border border-gold-400/20 space-y-2">
-              <div class="flex justify-between text-sm text-stone-400">
-                <span>Subtotal (CAD)</span><strong id="cost-subtotal" class="text-white">$0.00</strong>
-              </div>
-              <div class="flex justify-between text-sm text-stone-400 pb-2 border-b border-gold-400/15">
-                <span>Ontario HST (13%)</span><strong id="cost-tax" class="text-white">$0.00</strong>
-              </div>
-              <div class="flex justify-between text-lg font-bold text-white pt-1">
-                <span><i class="fa-solid fa-coins text-gold-400 mr-1.5"></i>Grand total</span>
-                <strong id="cost-total" class="text-gold-300 text-xl">$0.00</strong>
-              </div>
-            </div>
+            <div id="items-list" class="items"></div>
+            <span id="items-count" class="fineprint" style="font-size: 13px;"></span>
           </div>
+
+          <aside class="ledger" aria-labelledby="ledger-title">
+            <div class="ledger-head">
+              <h3 id="ledger-title" class="h3">The ledger</h3>
+              <span id="ledger-count" class="muted num" style="font-size: 13px;">0 pieces</span>
+            </div>
+
+            <div>
+              <div id="ledger-lines"></div>
+              <button id="btn-reset" type="button" class="btn-text no-print">Untick all</button>
+            </div>
+
+            <div class="ledger-sums">
+              <div><span>Subtotal</span><span id="cost-subtotal">$0.00</span></div>
+              <div><span>Ontario HST 13%</span><span id="cost-tax">$0.00</span></div>
+              <div class="ledger-total"><span>Total, CAD</span><strong id="cost-total">$0.00</strong></div>
+            </div>
+
+            <div class="no-print">
+              <div class="budget-row">
+                <label>Budget $
+                  <input type="number" id="budget-input" value="1800" min="0" step="50" inputmode="numeric">
+                </label>
+                <span id="budget-notice" class="budget-msg num"></span>
+              </div>
+              <div class="meter" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="budget-meter"><div id="budget-bar"></div></div>
+            </div>
+
+            <div class="ledger-actions no-print">
+              <button id="btn-tryon" type="button" class="btn btn-accent btn-lg btn-block">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V10a6 6 0 0 1 12 0v11z"/><path d="M10 9l3-2M9.5 13l5-3.5"/></svg>
+                Try it on
+              </button>
+              <div class="row">
+                <button id="btn-dress-blender" type="button" class="btn btn-ghost" title="Dress the 3D avatar in Blender">Blender</button>
+                <button id="btn-print" type="button" class="btn btn-ghost" title="Print the shopping manifest">Print</button>
+                <button id="btn-copy" type="button" class="btn btn-ghost" title="Copy the shopping manifest">Copy</button>
+              </div>
+              <span class="fineprint">Estimated Toronto prices. Try it on uses his photo from Chapter I.</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- IV · THE ROUTE                                                      -->
+    <!-- =================================================================== -->
+    <section id="route" class="chapter" aria-labelledby="route-title">
+      <div class="wrap">
+        <div class="chapter-head">
+          <span class="eyebrow">IV · The route</span>
+          <h2 id="route-title" class="h2">No stops yet</h2>
+          <p id="route-sub" class="lede">Tick a garment and the route draws itself, starting at the castle.</p>
         </div>
 
-        <!-- RIGHT: map + itinerary -->
-        <div class="lg:col-span-5 space-y-8">
-          <div class="gothic-card rounded-2xl p-5 sm:p-6">
-            <div class="flex items-center justify-between pb-4 border-b border-gold-400/15 mb-4">
-              <div>
-                <h3 class="font-display text-lg sm:text-xl font-bold text-gold-200">Map &amp; route</h3>
-                <p class="text-xs text-stone-400">Shortest-hop order, starting at Casa Loma.</p>
-              </div>
-              <span class="px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest bg-crimson-900/60 text-crimson-200 border border-crimson-400/40 rounded-full">🏰 Casa Loma</span>
-            </div>
-
-            <div id="map" class="w-full h-72 rounded-xl border border-gold-400/25"></div>
-
-            <div class="mt-5 space-y-3 no-print">
-              <button id="btn-gmaps" type="button" class="w-full py-3 px-4 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-bold text-sm shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-map-location-dot"></i>
-                <span>Open route in Google Maps</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-80"></i>
-              </button>
-              <div class="grid grid-cols-2 gap-2">
-                <button id="btn-copy" type="button" class="py-2.5 px-3 rounded-xl bg-velvet-800 hover:bg-velvet-700 text-gold-200 border border-gold-400/25 font-semibold text-xs transition flex items-center justify-center gap-1.5">
-                  <i class="fa-solid fa-copy"></i> Copy manifest
-                </button>
-                <button id="btn-reset" type="button" class="py-2.5 px-3 rounded-xl bg-velvet-800 hover:bg-velvet-700 text-stone-400 hover:text-crimson-300 border border-gold-400/25 font-semibold text-xs transition flex items-center justify-center gap-1.5">
-                  <i class="fa-solid fa-rotate-left"></i> Untick all
+        <div class="route">
+          <div class="map-frame"><div id="map" role="region" aria-label="Map of the route from Casa Loma"></div></div>
+          <div class="itinerary">
+            <div class="origin-row no-print">
+              <span class="origin-label">Start from</span>
+              <div id="origin-tabs" class="segmented" role="group" aria-label="Start the route from">
+                <button type="button" data-origin="casa" aria-pressed="true">Casa Loma</button>
+                <button type="button" data-origin="me" aria-pressed="false">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+                  <span id="origin-me-label">My location</span>
                 </button>
               </div>
             </div>
-          </div>
-
-          <div class="gothic-card rounded-2xl p-5 sm:p-6">
-            <h3 class="font-display text-lg font-bold text-gold-200 pb-3 border-b border-gold-400/15 mb-4 flex items-center gap-2">
-              <i class="fa-solid fa-compass text-crimson-400"></i> Boutique stops
-            </h3>
-            <div id="stops-list" class="space-y-4"></div>
+            <ol class="stops">
+              <li class="stop">
+                <span id="origin-mark" class="stop-mark origin" aria-hidden="true"><span></span></span>
+                <span class="stop-body">
+                  <span id="origin-name" class="stop-name">Casa Loma</span>
+                  <span id="origin-meta" class="stop-meta">1 Austin Terrace · the start</span>
+                </span>
+              </li>
+            </ol>
+            <ol id="stops-list" class="stops" start="1"></ol>
+            <button id="btn-gmaps" type="button" class="btn btn-light btn-lg btn-block no-print">
+              Open route in Google Maps
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+            </button>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="relative z-10 border-t border-gold-400/15 py-6 px-4 text-center font-mono text-[11px] text-stone-500 space-y-1 no-print">
-    <div>Hack or Treat · Dracula's Personal Catalogue</div>
-    <div>
-      <a href="count_dracula_the_sartorial_mirror_project%20-%20Copy.html" class="text-gold-400 hover:underline">About the project</a>
-      <span class="mx-2">·</span>
-      <a href="camera-to-blender/README.md" class="text-gold-400 hover:underline">Optional 3D scan (camera-to-blender)</a>
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>Hack or Treat · Dracula's Personal Catalogue</span>
+      <nav aria-label="Footer">
+        <a class="link" href="count_dracula_the_sartorial_mirror_project%20-%20Copy.html">About the project</a>
+        <a class="link" href="camera-to-blender/README.md">Camera to 3D setup</a>
+        <span>Prices are estimates. Check with each boutique before you go.</span>
+      </nav>
     </div>
-    <div>Prices are estimates. Check with each boutique before you go.</div>
   </footer>
 
-  <!-- Custom garment modal -->
-  <!-- Photo source chooser: opened by the dropzone and "Replace photo" -->
-  <div id="photo-choice" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1100] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="photo-choice-title">
-    <div class="gothic-card w-full max-w-sm rounded-2xl p-6">
-      <h3 id="photo-choice-title" class="font-display text-lg font-bold text-gold-200 text-center">How shall we capture him?</h3>
-      <div class="mt-5 grid gap-3">
-        <a href="http://localhost:8001" class="block rounded-xl border border-gold-400/40 bg-velvet-800 hover:bg-velvet-700 px-4 py-3 text-left transition">
-          <span class="block font-display text-sm font-bold text-gold-200 uppercase tracking-wider">&#128247; Camera to 3D</span>
-          <span class="block mt-0.5 text-xs text-stone-400">Open camera-to-blender at localhost:8001</span>
-        </a>
-        <button id="btn-choice-upload" type="button" class="w-full rounded-xl border border-gold-400/40 bg-velvet-800 hover:bg-velvet-700 px-4 py-3 text-left transition">
-          <span class="block font-display text-sm font-bold text-gold-200 uppercase tracking-wider">&#128444;&#65039; Upload a photo</span>
-          <span class="block mt-0.5 text-xs text-stone-400">Choose a JPG, PNG or WebP from this device</span>
-        </button>
-      </div>
-      <button id="btn-choice-cancel" type="button" class="mt-4 w-full font-mono text-xs text-stone-400 hover:text-white transition">Cancel</button>
-    </div>
+  <!-- Phone: the ledger total stays in reach -->
+  <div class="mobile-bar" aria-label="Ledger summary">
+    <a href="#wardrobe" style="text-decoration: none; display: flex; flex-direction: column;">
+      <span id="mb-meta" class="mobile-bar-meta">0 pieces · incl. HST</span>
+      <span id="mb-total" class="mobile-bar-total num">$0.00</span>
+    </a>
+    <button id="btn-tryon-mobile" type="button" class="btn btn-accent btn-lg">Try it on</button>
   </div>
 
-  <div id="custom-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1100] hidden items-center justify-center p-4">
-    <div class="gothic-card w-full max-w-md rounded-2xl p-6">
-      <div class="flex justify-between items-center pb-3 border-b border-gold-400/15">
-        <h3 class="font-display text-lg font-bold text-gold-200">🦇 Add a bespoke garment</h3>
-        <button id="btn-close-custom" type="button" class="text-stone-400 hover:text-white text-lg" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="custom-form" class="mt-4 space-y-4">
+  <!-- Bespoke garment -->
+  <div id="custom-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="custom-title">
+    <div class="dialog" style="max-width: 460px;">
+      <div class="dialog-head">
         <div>
-          <label for="custom-name" class="block text-xs font-semibold text-stone-400 mb-1">Item name</label>
-          <input type="text" id="custom-name" required maxlength="60" placeholder="e.g. Ruby medallion, onyx cufflinks" class="w-full px-3.5 py-2 text-sm bg-velvet-950 border border-gold-400/30 rounded-xl text-white focus:outline-none focus:border-gold-300">
+          <span class="eyebrow">Bespoke</span>
+          <h3 id="custom-title" class="dialog-title">Add a garment</h3>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="custom-price" class="block text-xs font-semibold text-stone-400 mb-1">Price (CAD)</label>
-            <input type="number" id="custom-price" min="0.01" step="0.01" required placeholder="125.00" class="w-full px-3.5 py-2 text-sm bg-velvet-950 border border-gold-400/30 rounded-xl text-white focus:outline-none focus:border-gold-300">
-          </div>
-          <div>
-            <label for="custom-store" class="block text-xs font-semibold text-stone-400 mb-1">Boutique</label>
-            <select id="custom-store" class="w-full px-3.5 py-2 text-sm bg-velvet-950 border border-gold-400/30 rounded-xl text-white focus:outline-none focus:border-gold-300"></select>
-          </div>
+        <button id="btn-close-custom" type="button" class="icon-btn" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <form id="custom-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <label class="field">Item name
+          <input type="text" id="custom-name" required maxlength="60" placeholder="Ruby medallion, onyx cufflinks…">
+        </label>
+        <div class="fields-2">
+          <label class="field">Price (CAD)
+            <input type="number" id="custom-price" min="0.01" step="0.01" required placeholder="125.00">
+          </label>
+          <label class="field">Boutique
+            <select id="custom-store"></select>
+          </label>
         </div>
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" id="btn-cancel-custom" class="px-4 py-2 rounded-xl text-xs font-semibold bg-velvet-800 text-stone-300 hover:bg-velvet-700">Cancel</button>
-          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-crimson-600 text-white hover:bg-crimson-500">Add to list</button>
+        <div class="dialog-actions">
+          <button type="button" id="btn-cancel-custom" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-accent">Add to the ledger</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Try-on modal: his photo next to the same photo wearing the ticked garments -->
-  <div id="tryon-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1100] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="tryon-title">
-    <div class="gothic-card w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl p-5 sm:p-6">
-      <div class="flex justify-between items-center pb-3 border-b border-gold-400/15">
-        <h3 id="tryon-title" class="font-display text-lg font-bold text-gold-200">🪞 The mirror that works</h3>
-        <button id="btn-close-tryon" type="button" class="text-stone-400 hover:text-white text-lg" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+  <!-- Try-on: his photo next to the same photo wearing the ticked garments -->
+  <div id="tryon-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tryon-title">
+    <div class="dialog" style="max-width: 900px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">The mirror that works</span>
+          <h3 id="tryon-title" class="dialog-title">The gala look, <em>tried on</em></h3>
+        </div>
+        <button id="btn-close-tryon" type="button" class="icon-btn" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
       </div>
 
-      <div id="tryon-garments" class="flex flex-wrap gap-1.5 mt-4"></div>
+      <div id="tryon-garments" class="chips"></div>
 
-      <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
+      <div class="compare">
         <figure>
-          <figcaption class="font-mono text-[10px] uppercase tracking-widest text-stone-400 mb-1.5">Before</figcaption>
-          <div class="aspect-[3/4] rounded-xl overflow-hidden border border-gold-400/25 bg-velvet-950">
-            <img id="tryon-before" alt="His photo" class="w-full h-full object-cover">
-          </div>
+          <div class="mirror"><div class="mirror-glass">
+            <img id="tryon-before" alt="His photo">
+          </div></div>
+          <figcaption><em>Before</em><span>As uploaded</span></figcaption>
         </figure>
         <figure>
-          <figcaption class="font-mono text-[10px] uppercase tracking-widest text-gold-300 mb-1.5">Wearing the outfit</figcaption>
-          <div class="relative aspect-[3/4] rounded-xl overflow-hidden border border-gold-400/50 bg-velvet-950">
-            <img id="tryon-after" alt="Him wearing the ticked garments" class="hidden w-full h-full object-contain bg-white">
-            <model-viewer id="tryon-3d" class="hidden w-full h-full" camera-controls auto-rotate shadow-intensity="1" exposure="1.1" style="background:#110b15"></model-viewer>
-            <div id="tryon-loading" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4">
-              <i class="fa-solid fa-spinner fa-spin text-2xl text-gold-300"></i>
-              <span class="text-xs text-stone-400">Tailoring the look...</span>
+          <div class="mirror is-lit"><div class="mirror-glass">
+            <img id="tryon-after" alt="Him wearing the ticked garments" class="hidden">
+            <model-viewer id="tryon-3d" class="hidden" camera-controls auto-rotate shadow-intensity="1" exposure="1.1"></model-viewer>
+            <div id="tryon-loading" class="tryon-loading">
+              <svg class="spinner" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9A96B" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/></svg>
+              <span>Tailoring the look…</span>
             </div>
-          </div>
+          </div></div>
+          <figcaption><em>After</em><span id="tryon-after-note">Wearing the ticked pieces</span></figcaption>
         </figure>
       </div>
 
-      <p id="tryon-status" class="mt-4 text-sm text-stone-300" role="status"></p>
-
-      <div class="mt-4 flex flex-wrap gap-2 justify-end">
-        <button id="btn-tryon-again" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-velvet-800 text-gold-200 border border-gold-400/30 hover:bg-velvet-700 disabled:opacity-40 disabled:cursor-not-allowed">
-          <i class="fa-solid fa-rotate mr-1"></i> Try again
-        </button>
-        <button id="btn-tryon-3d" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-crimson-600 text-white hover:bg-crimson-500 disabled:opacity-40 disabled:cursor-not-allowed">
-          <i class="fa-solid fa-cube mr-1"></i> Make it 3D
-        </button>
-        <button id="btn-tryon-blender" type="button" class="hidden px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-gold-500 to-gold-400 text-velvet-950 hover:from-gold-400 hover:to-gold-300">
-          <i class="fa-solid fa-paper-plane mr-1"></i> Send to Blender
-        </button>
+      <div class="dialog-foot">
+        <p id="tryon-status" class="status" role="status"></p>
+        <div class="dialog-actions">
+          <button id="btn-tryon-again" type="button" class="btn btn-ghost">Try again</button>
+          <button id="btn-tryon-3d" type="button" class="btn btn-outline">Make it 3D</button>
+          <button id="btn-tryon-blender" type="button" class="btn btn-accent hidden">Send to Blender</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed bottom-6 right-6 z-[1200] bg-velvet-900 text-white px-5 py-3 rounded-2xl border border-crimson-500 shadow-2xl flex items-center gap-3 translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
-    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
-    <span id="toast-msg" class="text-sm font-medium"></span>
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toast-dot" class="toast-dot"></span>
+    <span id="toast-msg"></span>
   </div>
 
   <script>
@@ -593,49 +741,49 @@
           name: 'Victorian Revival',
           note: 'High collars, ruffles and brocade, straight from the castle archive.',
           pieces: ['Opera cape', 'Poet shirt', 'Lace jabot'],
-          colors: ['#141018', '#9e1b32', '#d4af37', '#f1e6d6'],
+          colors: ['#3B0A14', '#7A1426', '#C9A96B', '#EDE4D3'],
         },
         {
           id: 'academia',
           name: 'Dark Academia',
           note: 'Tweed, knitwear and the faint smell of old library books.',
           pieces: ['Tweed blazer', 'Sweater vest', 'Oxford shirt'],
-          colors: ['#3b2f2a', '#6b5440', '#2d3a2e', '#e8dcc8'],
+          colors: ['#3D3326', '#6B5B45', '#8A7A5E', '#D8CDB8'],
         },
         {
           id: 'quiet',
           name: 'Quiet Luxury',
           note: 'No logos, perfect fabric. Wealth that whispers after midnight.',
           pieces: ['Cashmere overcoat', 'Merino turtleneck', 'Wool trousers'],
-          colors: ['#1f1b22', '#4b4e55', '#a89f91', '#e9e3d8'],
+          colors: ['#2E2A26', '#6E655B', '#BDB2A2', '#EDE4D3'],
         },
         {
           id: 'street',
           name: 'Neo-Gothic Streetwear',
           note: 'Leather, silver and oversized fits for nights in the city.',
           pieces: ['Leather jacket', 'Graphic tee', 'Silver chains'],
-          colors: ['#07060a', '#2a2a30', '#c0c0c8', '#c1121f'],
+          colors: ['#0E0E10', '#2B2B2B', '#8F8F94', '#D4D4D8'],
         },
         {
           id: 'maximal',
           name: 'Romantic Maximalism',
           note: 'Velvet, roses and bows. More is more, and more is still not enough.',
           pieces: ['Velvet tailcoat', 'Jacquard waistcoat', 'Silk bow'],
-          colors: ['#2a0610', '#7a1426', '#5a189a', '#d4af37'],
+          colors: ['#4A0E1C', '#9E2A4A', '#D98BA0', '#F2D7DE'],
         },
         {
           id: 'minimal',
           name: 'Minimal Monochrome',
           note: 'One colour, clean lines and a silhouette that cuts the fog.',
           pieces: ['Structured cape', 'Mock-neck knit', 'Slim trousers'],
-          colors: ['#0b0a0d', '#1c1a20', '#2e2b33', '#45424b'],
+          colors: ['#0D0D0D', '#3A3A3A', '#8C8C8C', '#F2F2F2'],
         },
       ];
 
       // Dracula's Toronto route: Casa Loma origin plus the boutiques
       const STORES = {
         'Casa Loma': {
-          name: 'Casa Loma Castle (origin)',
+          name: 'Casa Loma Castle',
           address: '1 Austin Terrace, Toronto, ON M5R 1X8',
           lat: 43.6780, lng: -79.4094,
           isOrigin: true,
@@ -645,76 +793,88 @@
           address: '50 Bloor St W, Toronto, ON M4W 1A1',
           lat: 43.6702, lng: -79.3887,
           phone: '(416) 922-2333',
-          hours: '10:00 AM - 08:00 PM',
+          hours: '10 am – 8 pm',
         },
         'State & Liberty': {
           name: 'State & Liberty Menswear',
           address: '672 Queen St W, Toronto, ON M6J 1E5',
           lat: 43.6457, lng: -79.4124,
           phone: '(647) 351-7828',
-          hours: '11:00 AM - 07:00 PM',
+          hours: '11 am – 7 pm',
         },
         'Borderline Plus': {
           name: 'Borderline Plus Gothic Boutique',
           address: '425 Queen St W #116, Toronto, ON M5V 2A5',
           lat: 43.6486, lng: -79.3958,
           phone: '(416) 504-6330',
-          hours: '11:00 AM - 07:00 PM',
+          hours: '11 am – 7 pm',
         },
       };
       const BOUTIQUES = Object.keys(STORES).filter((k) => !STORES[k].isOrigin);
 
-      // Wardrobe catalogue; `styles` decides which picks recommend each garment
+      // Where the route starts: Casa Loma, or the visitor's own position
+      const ORIGIN_KEY = 'dracucloth-origin';
+      const CASA = {
+        kind: 'casa', name: 'Casa Loma', meta: '1 Austin Terrace · the start', from: 'Casa Loma', start: 'at the castle',
+        lat: STORES['Casa Loma'].lat, lng: STORES['Casa Loma'].lng, address: STORES['Casa Loma'].address,
+      };
+      let origin = CASA;
+
+      // Wardrobe catalogue; `styles` decides which picks recommend each garment,
+      // `swatch` is the fabric colour shown next to it
       let items = [
-        { id: 'item-1', name: 'Velvet Evening Cape', price: 450, store: 'Holt Renfrew', icon: '🧥', styles: ['victorian', 'maximal'] },
-        { id: 'item-2', name: 'Silk Cravat & Pocket Square', price: 85, store: 'Holt Renfrew', icon: '👔', styles: ['victorian', 'maximal'] },
-        { id: 'item-3', name: 'Athletic-Fit Dress Shirt', price: 140, store: 'State & Liberty', icon: '👔', styles: ['victorian', 'academia', 'minimal'] },
-        { id: 'item-4', name: 'Stretch Formal Trousers', price: 195, store: 'State & Liberty', icon: '👖', styles: ['victorian', 'academia', 'quiet', 'maximal', 'minimal'] },
-        { id: 'item-5', name: 'Gothic Frock Coat', price: 380, store: 'Borderline Plus', icon: '🧛', styles: ['victorian', 'maximal'] },
-        { id: 'item-6', name: 'Theatrical Waistcoat', price: 160, store: 'Borderline Plus', icon: '🦺', styles: ['victorian', 'maximal'] },
-        { id: 'item-7', name: 'Tweed Sport Blazer', price: 495, store: 'State & Liberty', icon: '🧥', styles: ['academia'] },
-        { id: 'item-8', name: 'Cable-Knit Sweater Vest', price: 120, store: 'Holt Renfrew', icon: '🦺', styles: ['academia'] },
-        { id: 'item-9', name: 'Cashmere Overcoat', price: 1250, store: 'Holt Renfrew', icon: '🧥', styles: ['quiet', 'minimal'] },
-        { id: 'item-10', name: 'Merino Turtleneck', price: 245, store: 'Holt Renfrew', icon: '🧶', styles: ['quiet', 'minimal', 'academia'] },
-        { id: 'item-11', name: 'Leather Moto Jacket', price: 420, store: 'Borderline Plus', icon: '🧥', styles: ['street'] },
-        { id: 'item-12', name: 'Oversized Bat-Print Tee', price: 45, store: 'Borderline Plus', icon: '👕', styles: ['street'] },
-        { id: 'item-13', name: 'Layered Silver Chains', price: 60, store: 'Borderline Plus', icon: '⛓️', styles: ['street'] },
-        { id: 'item-14', name: 'Slim Black Denim', price: 110, store: 'Borderline Plus', icon: '👖', styles: ['street'] },
-        { id: 'item-15', name: 'Silk Jacquard Bow Tie', price: 70, store: 'Holt Renfrew', icon: '🎀', styles: ['maximal'] },
-        { id: 'item-16', name: 'Structured Wool Cape', price: 520, store: 'Borderline Plus', icon: '🧛', styles: ['minimal'] },
+        { id: 'item-1', name: 'Velvet Evening Cape', price: 450, store: 'Holt Renfrew', kind: 'Outerwear', swatch: '#4A0E1C', styles: ['victorian', 'maximal'] },
+        { id: 'item-2', name: 'Silk Cravat & Pocket Square', price: 85, store: 'Holt Renfrew', kind: 'Neckwear', swatch: '#7A1426', styles: ['victorian', 'maximal'] },
+        { id: 'item-3', name: 'Athletic-Fit Dress Shirt', price: 140, store: 'State & Liberty', kind: 'Shirt', swatch: '#E8E1D3', styles: ['victorian', 'academia', 'minimal'] },
+        { id: 'item-4', name: 'Stretch Formal Trousers', price: 195, store: 'State & Liberty', kind: 'Trousers', swatch: '#1B1B1F', styles: ['victorian', 'academia', 'quiet', 'maximal', 'minimal'] },
+        { id: 'item-5', name: 'Gothic Frock Coat', price: 380, store: 'Borderline Plus', kind: 'Coat', swatch: '#2A1A22', styles: ['victorian', 'maximal'] },
+        { id: 'item-6', name: 'Theatrical Waistcoat', price: 160, store: 'Borderline Plus', kind: 'Waistcoat', swatch: '#5B2333', styles: ['victorian', 'maximal'] },
+        { id: 'item-7', name: 'Tweed Sport Blazer', price: 495, store: 'State & Liberty', kind: 'Blazer', swatch: '#6B5B45', styles: ['academia'] },
+        { id: 'item-8', name: 'Cable-Knit Sweater Vest', price: 120, store: 'Holt Renfrew', kind: 'Knitwear', swatch: '#8A7A5E', styles: ['academia'] },
+        { id: 'item-9', name: 'Cashmere Overcoat', price: 1250, store: 'Holt Renfrew', kind: 'Coat', swatch: '#3A332E', styles: ['quiet', 'minimal'] },
+        { id: 'item-10', name: 'Merino Turtleneck', price: 245, store: 'Holt Renfrew', kind: 'Knitwear', swatch: '#1F1C1C', styles: ['quiet', 'minimal', 'academia'] },
+        { id: 'item-11', name: 'Leather Moto Jacket', price: 420, store: 'Borderline Plus', kind: 'Outerwear', swatch: '#121012', styles: ['street'] },
+        { id: 'item-12', name: 'Oversized Bat-Print Tee', price: 45, store: 'Borderline Plus', kind: 'Tee', swatch: '#2B2B2B', styles: ['street'] },
+        { id: 'item-13', name: 'Layered Silver Chains', price: 60, store: 'Borderline Plus', kind: 'Jewellery', swatch: '#B8B8B8', styles: ['street'] },
+        { id: 'item-14', name: 'Slim Black Denim', price: 110, store: 'Borderline Plus', kind: 'Trousers', swatch: '#17181C', styles: ['street'] },
+        { id: 'item-15', name: 'Silk Jacquard Bow Tie', price: 70, store: 'Holt Renfrew', kind: 'Neckwear', swatch: '#6E1022', styles: ['maximal'] },
+        { id: 'item-16', name: 'Structured Wool Cape', price: 520, store: 'Borderline Plus', kind: 'Outerwear', swatch: '#222225', styles: ['minimal'] },
       ].map((item) => ({ ...item, quantity: 1, checked: false }));
 
       const state = { photo: null, styles: [], storeFilter: 'ALL', showAll: false };
 
       const $ = (id) => document.getElementById(id);
-      const money = (n) => `$${n.toFixed(2)}`;
+      const show = (el, on) => (typeof el === 'string' ? $(el) : el).classList.toggle('hidden', !on);
+      const money = (n) => '$' + n.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
       const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+      const ICON = {
+        check: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
+        minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
+        plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+        trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+      };
+
       function showToast(msg, type = 'success') {
-        const icons = {
-          success: 'fa-circle-check text-emerald-400',
-          warning: 'fa-triangle-exclamation text-gold-300',
-          info: 'fa-circle-info text-sky-300',
-        };
         $('toast-msg').textContent = msg;
-        $('toast-icon').className = `fa-solid ${icons[type] || icons.info} text-lg`;
+        $('toast-dot').className = `toast-dot ${type}`;
         const toast = $('toast');
-        toast.classList.remove('translate-y-24', 'opacity-0');
+        toast.classList.add('is-shown');
         clearTimeout(showToast.timer);
-        showToast.timer = setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 3000);
+        showToast.timer = setTimeout(() => toast.classList.remove('is-shown'), 3000);
       }
 
       // -------------------------------------------------------------------
-      // Step 1: photo
+      // I · photo
       // -------------------------------------------------------------------
       const input = $('photo-input');
-      const dropzone = $('dropzone');
+      const glass = $('mirror-glass');
       const preview = $('photo-preview');
 
       function showError(msg) {
-        const el = $('photo-error');
-        el.textContent = msg;
-        el.classList.toggle('hidden', !msg);
+        $('photo-error').textContent = msg;
+        show('photo-error', !!msg);
       }
 
       function handleFile(file) {
@@ -756,21 +916,15 @@
       function setPhoto(photo) {
         state.photo = photo;
         const has = !!photo;
-        preview.classList.toggle('hidden', !has);
-        dropzone.classList.toggle('hidden', has);
-        $('photo-actions').classList.toggle('hidden', !has);
+        show(preview, has);
+        show('dropzone', !has);
+        show('photo-actions', has);
         if (has) {
           preview.src = photo.src;
           $('photo-name').textContent = photo.name;
         } else {
           preview.removeAttribute('src');
         }
-
-        const status = $('photo-status');
-        status.textContent = has ? 'Reflection captured' : 'No reflection yet';
-        status.className = 'font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded border ' +
-          (has ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40'
-               : 'bg-crimson-900/80 text-crimson-300 border-crimson-400/40');
         renderSummary();
       }
 
@@ -778,64 +932,52 @@
         handleFile(input.files[0]);
         input.value = ''; // allow choosing the same file again
       });
-
-      ['dragenter', 'dragover'].forEach((type) =>
-        dropzone.addEventListener(type, (e) => {
-          e.preventDefault();
-          dropzone.classList.add('is-dragging');
-        })
-      );
-      ['dragleave', 'drop'].forEach((type) =>
-        dropzone.addEventListener(type, () => dropzone.classList.remove('is-dragging'))
-      );
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        handleFile(e.dataTransfer.files[0]);
-      });
-
-      const photoChoice = $('photo-choice');
-      const openPhotoChoice = (open) => {
-        photoChoice.classList.toggle('hidden', !open);
-        photoChoice.classList.toggle('flex', open);
-        if (open) $('btn-choice-upload').focus();
-      };
-      dropzone.addEventListener('click', () => openPhotoChoice(true));
-      $('btn-replace-photo').addEventListener('click', () => openPhotoChoice(true));
-      $('btn-choice-upload').addEventListener('click', () => {
-        openPhotoChoice(false);
-        input.click();
-      });
-      $('btn-choice-cancel').addEventListener('click', () => openPhotoChoice(false));
-      photoChoice.addEventListener('click', (e) => { if (e.target === photoChoice) openPhotoChoice(false); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openPhotoChoice(false); });
-
+      $('btn-upload').addEventListener('click', () => input.click());
+      $('btn-replace-photo').addEventListener('click', () => input.click());
       $('btn-remove-photo').addEventListener('click', () => {
         showError('');
         setPhoto(null);
       });
 
+      ['dragenter', 'dragover'].forEach((type) =>
+        glass.addEventListener(type, (e) => {
+          e.preventDefault();
+          glass.classList.add('is-dragging');
+        })
+      );
+      ['dragleave', 'drop'].forEach((type) =>
+        glass.addEventListener(type, () => glass.classList.remove('is-dragging'))
+      );
+      glass.addEventListener('drop', (e) => {
+        e.preventDefault();
+        handleFile(e.dataTransfer.files[0]);
+      });
+
       // -------------------------------------------------------------------
-      // Step 2: styles
+      // II · styles
       // -------------------------------------------------------------------
       function renderStyles() {
         const full = state.styles.length >= MAX_STYLES;
-        $('style-grid').innerHTML = STYLES.map((s) => {
+        $('style-grid').innerHTML = STYLES.map((s, i) => {
           const on = state.styles.includes(s.id);
           return `
-            <button type="button" data-style="${s.id}" aria-pressed="${on}" ${!on && full ? 'disabled' : ''}
-              class="style-card relative text-left rounded-xl border border-gold-400/25 bg-velvet-950/70 enabled:hover:border-gold-400/60 p-4 transition">
-              <span class="style-check absolute top-3 right-3 w-6 h-6 rounded-full bg-gold-400 text-velvet-950 flex items-center justify-center text-sm font-bold opacity-0 scale-75 transition">✓</span>
-              <div class="flex h-2.5 w-28 rounded-full overflow-hidden mb-3">
-                ${s.colors.map((c) => `<span class="flex-1" style="background:${c}"></span>`).join('')}
-              </div>
-              <div class="font-display text-base font-bold text-gold-200 pr-8">${s.name}</div>
-              <p class="text-xs text-stone-400 mt-1 leading-relaxed">${s.note}</p>
-              <div class="flex flex-wrap gap-1.5 mt-3">
-                ${s.pieces.map((p) => `<span class="font-mono text-[10px] px-2 py-0.5 rounded bg-velvet-800 text-stone-300 border border-gold-400/15">${p}</span>`).join('')}
-              </div>
+            <button type="button" class="style-card" data-style="${s.id}" aria-pressed="${on}" ${!on && full ? 'disabled' : ''}>
+              <span class="style-swatches" aria-hidden="true">${s.colors.map((c) => `<span style="background:${c}"></span>`).join('')}</span>
+              <span class="style-body">
+                <span class="style-top">
+                  <span class="style-num">0${i + 1}</span>
+                  <span class="chosen-badge">${ICON.check}Chosen</span>
+                </span>
+                <span class="style-name">${s.name}</span>
+                <span class="style-note">${s.note}</span>
+                <span class="style-pieces">${s.pieces.join(' · ')}</span>
+              </span>
             </button>`;
         }).join('');
-        $('style-count').textContent = `${state.styles.length} / ${MAX_STYLES} chosen`;
+
+        const n = state.styles.length;
+        $('style-count').textContent = `${n} of ${MAX_STYLES} chosen`;
+        [...$('style-dots').children].forEach((dot, i) => dot.classList.toggle('on', i < n));
       }
 
       $('style-grid').addEventListener('click', (e) => {
@@ -848,54 +990,53 @@
         renderStyles();
         renderSummary();
         applyRecommendations();
+        // Keep keyboard focus on the card that was just toggled
+        const again = $('style-grid').querySelector(`[data-style="${id}"]`);
+        if (again) again.focus();
       });
 
       // -------------------------------------------------------------------
-      // Summary & save
+      // Profile summary & save
       // -------------------------------------------------------------------
       const styleNames = () => state.styles.map((id) => STYLES.find((s) => s.id === id).name);
 
       function renderSummary() {
-        [['summary-thumb', 'summary-thumb-empty'], ['shop-thumb', 'shop-thumb-empty']].forEach(([img, empty]) => {
-          $(img).classList.toggle('hidden', !state.photo);
-          $(empty).classList.toggle('hidden', !!state.photo);
-          if (state.photo) $(img).src = state.photo.src;
-        });
+        show('summary-thumb', !!state.photo);
+        show('summary-thumb-empty', !state.photo);
+        if (state.photo) $('summary-thumb').src = state.photo.src;
 
         const names = styleNames();
-        $('summary-tags').innerHTML = names
-          .map((n) => `<span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-crimson-900/60 text-gold-200 border border-gold-400/30">${n}</span>`)
-          .join('');
+        $('summary-text').textContent = names.length ? names.join(' · ') : 'No styles chosen yet';
 
         const missing = [];
         if (!state.photo) missing.push('a front photo');
         if (!names.length) missing.push('at least one style');
-        $('summary-text').textContent = missing.length
+        $('summary-note').textContent = missing.length
           ? `Still needed: ${missing.join(' and ')}.`
-          : 'Photo and style taste captured. Ready to dress the Count.';
+          : 'Photo and taste captured. Ready to dress the Count.';
 
         $('shop-subtitle').textContent = names.length
           ? `Recommended for ${names.join(', ')}. Untick anything he already owns.`
-          : 'Pick a style in Step 2 to get recommendations, or tick garments yourself.';
+          : 'Pick a style in Chapter II to get recommendations, or tick garments yourself.';
 
         $('btn-save').disabled = missing.length > 0;
         $('save-note').textContent = '';
-        $('pill-photo').classList.toggle('bg-gold-400/15', !!state.photo);
-        $('pill-style').classList.toggle('bg-gold-400/15', names.length > 0);
+        $('nav-photo').classList.toggle('is-done', !!state.photo);
+        $('nav-style').classList.toggle('is-done', names.length > 0);
       }
 
       $('btn-save').addEventListener('click', () => {
         const profile = { photo: state.photo, styles: state.styles, savedAt: new Date().toISOString() };
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-          $('save-note').textContent = '✓ Saved in this browser';
+          $('save-note').textContent = 'Saved in this browser';
         } catch (err) {
           $('save-note').textContent = 'Could not save here (browser storage is blocked or full).';
         }
       });
 
       // -------------------------------------------------------------------
-      // Step 3: wardrobe checklist
+      // III · wardrobe checklist
       // -------------------------------------------------------------------
       const matchesStyles = (item) => item.isCustom || item.styles.some((s) => state.styles.includes(s));
 
@@ -904,64 +1045,57 @@
         items.forEach((item) => {
           if (!item.isCustom) item.checked = matchesStyles(item);
         });
-        $('show-all-wrap').classList.toggle('hidden', !state.styles.length);
-        $('show-all-wrap').classList.toggle('flex', state.styles.length > 0);
+        show('only-taste-wrap', state.styles.length > 0);
         renderItems();
         updateCalculations();
       }
 
       function renderFilterTabs() {
-        $('filter-tabs').innerHTML = ['ALL', ...BOUTIQUES].map((key) => {
-          const on = state.storeFilter === key;
-          return `<button type="button" data-filter="${esc(key)}" class="px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition ${
-            on ? 'bg-crimson-600 text-white' : 'bg-velvet-800 text-stone-300 hover:bg-velvet-700'
-          }">${key === 'ALL' ? 'All' : esc(key)}</button>`;
-        }).join('');
+        $('filter-tabs').innerHTML = ['ALL', ...BOUTIQUES].map((key) =>
+          `<button type="button" data-filter="${esc(key)}" aria-pressed="${state.storeFilter === key}">${key === 'ALL' ? 'All' : esc(key)}</button>`
+        ).join('');
       }
 
       function renderItems() {
         const query = $('search-input').value.toLowerCase().trim();
-        const visible = items.filter((item) =>
-          (state.storeFilter === 'ALL' || item.store === state.storeFilter) &&
-          (!query || item.name.toLowerCase().includes(query) || item.store.toLowerCase().includes(query)) &&
-          (!state.styles.length || state.showAll || matchesStyles(item))
-        );
+        const visible = items
+          .filter((item) =>
+            (state.storeFilter === 'ALL' || item.store === state.storeFilter) &&
+            (!query || item.name.toLowerCase().includes(query) || item.store.toLowerCase().includes(query) || (item.kind || '').toLowerCase().includes(query)) &&
+            (!state.styles.length || state.showAll || matchesStyles(item))
+          )
+          // Pieces that suit his styles first
+          .sort((a, b) => (state.styles.length ? matchesStyles(b) - matchesStyles(a) : 0));
+
+        $('items-count').textContent = `Showing ${visible.length} of ${plural(items.length, 'garment')}`;
 
         if (!visible.length) {
-          $('items-list').innerHTML = '<div class="text-center py-8 text-stone-500 italic text-sm">No garments match this filter.</div>';
+          $('items-list').innerHTML = '<p class="empty">No garments match. Try another boutique or clear the search.</p>';
           return;
         }
 
         $('items-list').innerHTML = visible.map((item) => {
-          const tags = item.isCustom
-            ? '<span class="text-gold-300 font-semibold text-[10px]"><i class="fa-solid fa-star"></i> Custom</span>'
-            : item.styles.filter((s) => state.styles.includes(s))
-                .map((s) => `<span class="text-gold-300/90 text-[10px]">${STYLES.find((x) => x.id === s).name}</span>`).join(' · ');
+          const suits = !item.isCustom && state.styles.length && item.styles.some((s) => state.styles.includes(s));
+          const tag = item.isCustom ? '<span class="tag">Bespoke</span>' : suits ? '<span class="tag">Suits his taste</span>' : '';
+          const name = esc(item.name);
           return `
-            <div class="p-3.5 rounded-xl border ${item.checked ? 'bg-crimson-900/25 border-crimson-500/50' : 'bg-velvet-950/70 border-gold-400/15'} flex items-center justify-between gap-3 transition">
-              <label class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
-                <input type="checkbox" data-check="${item.id}" ${item.checked ? 'checked' : ''} class="w-5 h-5 shrink-0 accent-[#9e1b32] cursor-pointer">
-                <span class="text-xl shrink-0">${item.icon}</span>
-                <span class="min-w-0">
-                  <span class="block font-semibold text-sm truncate ${item.checked ? 'text-white' : 'text-stone-500'}">${esc(item.name)}</span>
-                  <span class="flex flex-wrap items-center gap-2 mt-0.5">
-                    <span class="bg-velvet-800 text-stone-300 px-2 py-0.5 rounded-md font-medium text-[10px]">${esc(item.store)}</span>
-                    ${tags}
-                  </span>
+            <div class="item ${item.checked ? 'is-on' : ''}">
+              <label class="item-main">
+                <input type="checkbox" data-check="${item.id}" ${item.checked ? 'checked' : ''}>
+                <span class="swatch ${item.isCustom ? 'is-bespoke' : ''}" ${item.isCustom ? '' : `style="background:${item.swatch}"`} aria-hidden="true"></span>
+                <span class="item-text">
+                  <span class="item-name">${name}</span>
+                  <span class="item-meta">${esc(item.kind || 'Bespoke')} · ${esc(item.store)}</span>
                 </span>
               </label>
-              <div class="flex items-center gap-3 shrink-0">
-                <div class="text-right">
-                  <div class="font-bold text-sm text-white">${money(item.price)}</div>
-                  <div class="text-[10px] text-stone-500">CAD / ea</div>
-                </div>
-                <div class="flex items-center bg-velvet-900 rounded-lg border border-gold-400/20 p-0.5">
-                  <button type="button" data-qty="${item.id}" data-delta="-1" class="w-6 h-6 text-xs text-stone-400 hover:text-crimson-300 font-bold" aria-label="Fewer">-</button>
-                  <span class="w-6 text-center text-xs font-bold text-white">${item.quantity}</span>
-                  <button type="button" data-qty="${item.id}" data-delta="1" class="w-6 h-6 text-xs text-stone-400 hover:text-emerald-300 font-bold" aria-label="More">+</button>
-                </div>
-                ${item.isCustom ? `<button type="button" data-delete="${item.id}" class="text-stone-500 hover:text-crimson-300 text-xs" title="Remove custom item"><i class="fa-solid fa-trash"></i></button>` : ''}
-              </div>
+              ${tag}
+              <span class="item-price">${money(item.price)}</span>
+              <span class="stepper">
+                <button type="button" data-qty="${item.id}" data-delta="-1" aria-label="One fewer ${name}">${ICON.minus}</button>
+                <span aria-label="Quantity">${item.quantity}</span>
+                <button type="button" data-qty="${item.id}" data-delta="1" aria-label="One more ${name}">${ICON.plus}</button>
+              </span>
+              ${item.isCustom ? `<button type="button" class="icon-btn item-remove" data-delete="${item.id}" aria-label="Remove ${name}">${ICON.trash}</button>` : ''}
             </div>`;
         }).join('');
       }
@@ -972,22 +1106,28 @@
         item.checked = e.target.checked;
         renderItems();
         updateCalculations();
+        const again = $('items-list').querySelector(`[data-check="${item.id}"]`);
+        if (again) again.focus();
       });
 
       $('items-list').addEventListener('click', (e) => {
         const qtyBtn = e.target.closest('[data-qty]');
         const delBtn = e.target.closest('[data-delete]');
+        let refocus = null;
         if (qtyBtn) {
           const item = items.find((i) => i.id === qtyBtn.dataset.qty);
           item.quantity = Math.max(1, item.quantity + Number(qtyBtn.dataset.delta));
+          if (Number(qtyBtn.dataset.delta) > 0) item.checked = true; // adding one more means he wants it
+          refocus = `[data-qty="${item.id}"][data-delta="${qtyBtn.dataset.delta}"]`;
         } else if (delBtn) {
           items = items.filter((i) => i.id !== delBtn.dataset.delete);
-          showToast('Custom item removed', 'info');
+          showToast('Bespoke garment removed', 'info');
         } else {
           return;
         }
         renderItems();
         updateCalculations();
+        if (refocus) { const again = $('items-list').querySelector(refocus); if (again) again.focus(); }
       });
 
       $('filter-tabs').addEventListener('click', (e) => {
@@ -999,8 +1139,8 @@
       });
 
       $('search-input').addEventListener('input', renderItems);
-      $('show-all').addEventListener('change', (e) => {
-        state.showAll = e.target.checked;
+      $('only-taste').addEventListener('change', (e) => {
+        state.showAll = !e.target.checked;
         renderItems();
       });
 
@@ -1012,7 +1152,7 @@
       });
 
       // -------------------------------------------------------------------
-      // Costs, route & map
+      // Ledger, route & map
       // -------------------------------------------------------------------
       function distanceKm(a, b) {
         const rad = (d) => (d * Math.PI) / 180;
@@ -1022,20 +1162,23 @@
         return 2 * 6371 * Math.asin(Math.sqrt(h));
       }
 
-      // Visit boutiques nearest-first from Casa Loma
+      // Visit boutiques nearest-first from the chosen starting point
       function routeOrder(storeKeys) {
         const left = [...storeKeys];
         const order = [];
-        let here = STORES['Casa Loma'];
+        const legs = [];
+        let here = origin;
         let km = 0;
         while (left.length) {
           left.sort((a, b) => distanceKm(here, STORES[a]) - distanceKm(here, STORES[b]));
           const next = left.shift();
-          km += distanceKm(here, STORES[next]);
+          const leg = distanceKm(here, STORES[next]);
+          km += leg;
+          legs.push(leg);
           here = STORES[next];
           order.push(next);
         }
-        return { order, km };
+        return { order, legs, km };
       }
 
       function currentTrip() {
@@ -1043,43 +1186,40 @@
         const byStore = {};
         picked.forEach((i) => (byStore[i.store] = byStore[i.store] || []).push(i));
         const subtotal = picked.reduce((sum, i) => sum + i.price * i.quantity, 0);
-        return { picked, byStore, subtotal, tax: subtotal * HST, total: subtotal * (1 + HST), ...routeOrder(Object.keys(byStore)) };
+        const pieces = picked.reduce((n, i) => n + i.quantity, 0);
+        return { picked, pieces, byStore, subtotal, tax: subtotal * HST, total: subtotal * (1 + HST), ...routeOrder(Object.keys(byStore)) };
       }
 
       function updateCalculations() {
         const trip = currentTrip();
+        const pieces = plural(trip.pieces, 'piece');
 
-        $('stat-items').textContent = trip.picked.reduce((n, i) => n + i.quantity, 0);
-        $('stat-stores').textContent = trip.order.length;
-        $('stat-total').textContent = money(trip.total);
-        $('stat-route').textContent = `${trip.km.toFixed(1)} km`;
-        $('pill-shop').classList.toggle('bg-gold-400/15', trip.picked.length > 0);
+        $('ledger-count').textContent = pieces;
+        $('mb-meta').textContent = `${pieces} · incl. HST`;
+        $('mb-total').textContent = money(trip.total);
+        $('nav-shop').classList.toggle('is-done', trip.pieces > 0);
 
-        const budget = parseFloat($('budget-input').value) || 0;
-        const pct = budget ? Math.min(100, Math.round((trip.total / budget) * 100)) : 0;
-        const over = trip.total > budget;
-        $('budget-percent').textContent = `${pct}%`;
-        $('budget-bar').style.width = `${pct}%`;
-        $('budget-bar').className = `h-full rounded-full transition-all duration-500 ${over ? 'bg-crimson-500' : 'bg-emerald-500'}`;
-        $('budget-notice').className = `text-xs mt-2 font-medium flex items-center gap-1.5 ${over ? 'text-crimson-300' : 'text-emerald-400'}`;
-        $('budget-notice').innerHTML = over
-          ? `<i class="fa-solid fa-triangle-exclamation"></i> Over budget by ${money(trip.total - budget)} CAD`
-          : `<i class="fa-solid fa-circle-check"></i> Within the castle allowance (${money(budget - trip.total)} left)`;
-
-        $('cost-table').innerHTML = trip.picked.length
+        $('ledger-lines').innerHTML = trip.picked.length
           ? trip.picked.map((i) => `
-              <tr>
-                <td class="py-2.5 px-1 font-medium text-stone-100">${esc(i.name)}</td>
-                <td class="py-2.5 px-1 text-stone-400 text-xs">${esc(i.store)}</td>
-                <td class="py-2.5 px-1 text-center font-semibold text-stone-300">${i.quantity}</td>
-                <td class="py-2.5 px-1 text-right text-stone-400">${money(i.price)}</td>
-                <td class="py-2.5 px-1 text-right font-bold text-white">${money(i.price * i.quantity)}</td>
-              </tr>`).join('')
-          : '<tr><td colspan="5" class="py-8 text-center text-stone-500 italic text-sm">No garments ticked yet.</td></tr>';
+              <div class="ledger-line">
+                <span>${esc(i.name)} <span class="muted">× ${i.quantity}</span><small>${esc(i.store)}</small></span>
+                <span class="num">${money(i.price * i.quantity)}</span>
+              </div>`).join('')
+          : '<p class="ledger-empty">Nothing chosen yet. Tick a garment to open his ledger.</p>';
+        show('btn-reset', trip.picked.length > 0);
 
         $('cost-subtotal').textContent = money(trip.subtotal);
         $('cost-tax').textContent = money(trip.tax);
         $('cost-total').textContent = money(trip.total);
+
+        const budget = parseFloat($('budget-input').value) || 0;
+        const pct = budget ? Math.min(100, Math.round((trip.total / budget) * 100)) : 0;
+        const over = trip.total > budget;
+        $('budget-bar').style.width = `${pct}%`;
+        $('budget-bar').classList.toggle('is-over', over);
+        $('budget-meter').setAttribute('aria-valuenow', pct);
+        $('budget-notice').classList.toggle('is-over', over);
+        $('budget-notice').textContent = over ? `Over by ${money(trip.total - budget)}` : `${money(budget - trip.total)} left`;
 
         renderStops(trip);
         drawRoute(trip.order);
@@ -1087,79 +1227,99 @@
 
       $('budget-input').addEventListener('input', updateCalculations);
 
+      const STOP_WORDS = ['No stops yet', 'One stop', 'Two stops', 'Three stops'];
+
       function renderStops(trip) {
-        if (!trip.order.length) {
-          $('stops-list').innerHTML = '<div class="text-center py-6 text-stone-500 italic text-sm">No boutique stops yet. Tick garments to build the route.</div>';
+        const n = trip.order.length;
+        $('route-title').textContent = n ? `${STOP_WORDS[n] || `${n} stops`} from ${origin.from}` : STOP_WORDS[0];
+        $('route-sub').textContent = n
+          ? `Shortest hop first, starting ${origin.start}. About ${trip.km.toFixed(1)} km in all.`
+          : `Tick a garment and the route draws itself, starting ${origin.start}.`;
+
+        if (!n) {
+          $('stops-list').innerHTML = '<li class="stops-empty">No boutique stops yet. Tick garments to build the route.</li>';
           return;
         }
-        const origin = encodeURIComponent(STORES['Casa Loma'].address);
+        const from = encodeURIComponent(origin.address);
         $('stops-list').innerHTML = trip.order.map((key, idx) => {
           const store = STORES[key];
-          const directions = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(store.address)}`;
+          const directions = `https://www.google.com/maps/dir/?api=1&origin=${from}&destination=${encodeURIComponent(store.address)}`;
+          const pick = trip.byStore[key].map((i) => esc(i.name) + (i.quantity > 1 ? ` ×${i.quantity}` : '')).join(' · ');
           return `
-            <div class="bg-velvet-950/80 p-4 rounded-xl border border-gold-400/15 space-y-2">
-              <div class="flex items-start gap-2">
-                <span class="w-6 h-6 shrink-0 rounded-full bg-crimson-600 text-white text-xs font-bold flex items-center justify-center">${idx + 1}</span>
-                <div>
-                  <h4 class="font-bold text-sm text-white">${store.name}</h4>
-                  <p class="text-xs text-stone-400">${store.address}</p>
-                </div>
-              </div>
-              <div class="text-xs text-stone-300 bg-velvet-900 p-2.5 rounded-lg border border-gold-400/10">
-                <strong class="text-crimson-300">Pick up:</strong> ${trip.byStore[key].map((i) => `${esc(i.name)} (x${i.quantity})`).join(', ')}
-              </div>
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-stone-500"><i class="fa-solid fa-phone text-[10px]"></i> ${store.phone} · ${store.hours}</span>
-                <a href="${directions}" target="_blank" rel="noopener" class="text-gold-300 hover:underline font-semibold whitespace-nowrap">Directions <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-              </div>
-            </div>`;
+            <li class="stop">
+              <span class="stop-mark" aria-hidden="true">${idx + 1}</span>
+              <span class="stop-body">
+                <span class="stop-head">
+                  <span class="stop-name">${esc(key)}</span>
+                  <span class="stop-leg">+${trip.legs[idx].toFixed(1)} km</span>
+                </span>
+                <span class="stop-meta">${esc(store.address)}</span>
+                <span class="stop-meta">${esc(store.hours)} · <a class="link" href="tel:${store.phone.replace(/\D/g, '')}">${esc(store.phone)}</a></span>
+                <span class="stop-pieces">${pick}</span>
+                <a class="link stop-link no-print" href="${directions}" target="_blank" rel="noopener">Directions from ${origin.kind === 'me' ? 'here' : 'Casa Loma'} ↗</a>
+              </span>
+            </li>`;
         }).join('');
       }
 
       let map = null;
       let routeLine = null;
+      let meMarker = null;
+      const markers = {};
+
+      const storeIcon = (n) => L.divIcon({
+        className: '',
+        html: n ? `<span class="pin on">${n}</span>` : '<span class="pin"></span>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
 
       function initMap() {
         if (!window.L) {
-          $('map').innerHTML = '<div class="h-full flex items-center justify-center text-sm text-stone-500 px-6 text-center">The map could not load (offline?). The route list below still works.</div>';
+          $('map').innerHTML = '<p class="empty" style="border:0">The map could not load (offline?). The route list still works.</p>';
           return;
         }
-        map = L.map('map', { scrollWheelZoom: false }).setView([43.6620, -79.4000], 12);
+        map = L.map('map', { scrollWheelZoom: false }).setView([43.6620, -79.4000], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          attribution: '© OpenStreetMap',
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(map);
 
         Object.entries(STORES).forEach(([key, store]) => {
-          const icon = L.divIcon({
-            className: '',
-            html: store.isOrigin
-              ? '<div class="w-9 h-9 rounded-full bg-crimson-600 flex items-center justify-center shadow-lg border-2 border-gold-400 text-lg">🏰</div>'
-              : '<div class="w-8 h-8 rounded-full bg-velvet-950 flex items-center justify-center shadow-md border-2 border-crimson-400 text-sm">🛍️</div>',
-            iconSize: store.isOrigin ? [36, 36] : [32, 32],
-            iconAnchor: store.isOrigin ? [18, 18] : [16, 16],
-          });
-          L.marker([store.lat, store.lng], { icon })
+          const icon = store.isOrigin
+            ? L.divIcon({ className: '', html: '<span class="pin-origin"></span>', iconSize: [22, 22], iconAnchor: [11, 11] })
+            : storeIcon(0);
+          markers[key] = L.marker([store.lat, store.lng], { icon, title: key })
             .addTo(map)
-            .bindPopup(`<strong>${store.name}</strong><br><span style="font-size:12px">${store.address}</span>${store.hours ? `<br><span style="font-size:12px">${store.hours}</span>` : ''}`);
+            .bindPopup(`<strong>${esc(store.name)}</strong><br>${esc(store.address)}${store.hours ? `<br>${esc(store.hours)} · ${esc(store.phone)}` : ''}`);
         });
 
         // Re-measure when the layout changes so the route stays framed
         new ResizeObserver(() => {
           map.invalidateSize();
-          if (routeLine) map.fitBounds(routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+          frameMap();
         }).observe($('map'));
+      }
+
+      function frameMap() {
+        if (!map) return;
+        const bounds = routeLine
+          ? routeLine.getBounds()
+          : L.latLngBounds([...Object.values(STORES), origin].map((s) => [s.lat, s.lng]));
+        map.fitBounds(bounds, { padding: [48, 48], maxZoom: 15 });
       }
 
       function drawRoute(order) {
         if (!map) return;
         if (routeLine) map.removeLayer(routeLine);
         routeLine = null;
-        if (!order.length) return;
-        const points = [STORES['Casa Loma'], ...order.map((k) => STORES[k])].map((s) => [s.lat, s.lng]);
-        routeLine = L.polyline(points, { color: '#e12d4b', weight: 4, opacity: 0.85, dashArray: '8, 8' }).addTo(map);
+        BOUTIQUES.forEach((key) => markers[key].setIcon(storeIcon(order.indexOf(key) + 1)));
+        if (order.length) {
+          const points = [origin, ...order.map((k) => STORES[k])].map((s) => [s.lat, s.lng]);
+          routeLine = L.polyline(points, { color: '#E3596C', weight: 3, opacity: 0.9, dashArray: '6 8', lineCap: 'round' }).addTo(map);
+        }
         map.invalidateSize();
-        map.fitBounds(routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+        frameMap();
       }
 
       $('btn-gmaps').addEventListener('click', () => {
@@ -1170,7 +1330,7 @@
         }
         const addr = (k) => encodeURIComponent(STORES[k].address);
         const waypoints = order.length > 1 ? `&waypoints=${order.slice(0, -1).map(addr).join('|')}` : '';
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(STORES['Casa Loma'].address)}&destination=${addr(order[order.length - 1])}${waypoints}&travelmode=driving`;
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.address)}&destination=${addr(order[order.length - 1])}${waypoints}&travelmode=driving`;
         window.open(url, '_blank', 'noopener');
       });
 
@@ -1181,10 +1341,10 @@
           return;
         }
         const lines = [
-          "🧛 COUNT DRACULA'S TORONTO SHOPPING MANIFEST",
-          '============================================',
+          "COUNT DRACULA'S TORONTO SHOPPING MANIFEST",
+          '==========================================',
           `Styles: ${styleNames().join(', ') || 'not chosen'}`,
-          'Origin: Casa Loma (1 Austin Terrace, Toronto, ON)',
+          origin.kind === 'me' ? `Start: my location (${origin.address})` : 'Start: Casa Loma (1 Austin Terrace, Toronto, ON)',
           '',
           'GARMENTS:',
           ...trip.picked.map((i) => `• ${i.name} (x${i.quantity}) - ${money(i.price * i.quantity)} CAD [${i.store}]`),
@@ -1213,21 +1373,107 @@
       $('btn-print').addEventListener('click', () => window.print());
 
       // -------------------------------------------------------------------
-      // Custom garment modal
+      // Starting point: Casa Loma or "my location"
+      // -------------------------------------------------------------------
+      function rememberOrigin(kind) {
+        try { localStorage.setItem(ORIGIN_KEY, kind); } catch (err) { /* storage blocked: just don't remember */ }
+      }
+
+      function renderOrigin() {
+        [...$('origin-tabs').querySelectorAll('[data-origin]')].forEach((b) =>
+          b.setAttribute('aria-pressed', b.dataset.origin === origin.kind));
+        $('origin-name').textContent = origin.name;
+        $('origin-meta').textContent = origin.meta;
+        $('origin-mark').classList.toggle('is-me', origin.kind === 'me');
+
+        if (map) {
+          if (meMarker) map.removeLayer(meMarker);
+          meMarker = null;
+          if (origin.kind === 'me') {
+            meMarker = L.marker([origin.lat, origin.lng], {
+              icon: L.divIcon({ className: '', html: '<span class="pin-me"></span>', iconSize: [22, 22], iconAnchor: [11, 11] }),
+              title: 'You are here',
+              zIndexOffset: 1000,
+            }).addTo(map).bindPopup('<strong>You are here</strong>');
+          }
+          // Casa Loma stays on the map as a landmark, dimmed when it is not the start
+          const castle = markers['Casa Loma'] && markers['Casa Loma'].getElement();
+          const pin = castle && castle.querySelector('.pin-origin');
+          if (pin) pin.classList.toggle('is-faded', origin.kind === 'me');
+        }
+        updateCalculations();
+      }
+
+      function setLocating(on) {
+        const btn = $('origin-tabs').querySelector('[data-origin="me"]');
+        btn.disabled = on;
+        $('origin-me-label').textContent = on ? 'Locating…' : 'My location';
+      }
+
+      function useMyLocation({ quiet = false } = {}) {
+        if (!('geolocation' in navigator) || !window.isSecureContext) {
+          if (!quiet) showToast('This browser cannot share your location here. Open the page over http://localhost or https.', 'warning');
+          return;
+        }
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition((pos) => {
+          setLocating(false);
+          const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+          const near = accuracy >= 1000 ? `${(accuracy / 1000).toFixed(1)} km` : `${Math.round(accuracy)} m`;
+          origin = {
+            kind: 'me', name: 'Your location', meta: `Accurate to about ${near} · the start`, from: 'where you are', start: 'where you are',
+            lat, lng, address: `${lat.toFixed(6)},${lng.toFixed(6)}`,
+          };
+          rememberOrigin('me');
+          renderOrigin();
+          const away = distanceKm(origin, CASA);
+          if (away > 50) {
+            showToast(`You are about ${Math.round(away).toLocaleString('en-CA')} km from Toronto. The route still starts from you.`, 'info');
+          } else if (!quiet) {
+            showToast('The route now starts where you are');
+          }
+        }, (err) => {
+          setLocating(false);
+          if (!quiet) {
+            showToast(err.code === err.PERMISSION_DENIED
+              ? 'Location access is blocked. Allow it in the browser to start from where you are.'
+              : 'Could not find your location. Starting from Casa Loma.', 'warning');
+          }
+          origin = CASA;
+          rememberOrigin('casa');
+          renderOrigin();
+        }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+      }
+
+      $('origin-tabs').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-origin]');
+        if (!btn || btn.disabled) return;
+        if (btn.dataset.origin === 'me') {
+          useMyLocation();
+        } else {
+          origin = CASA;
+          rememberOrigin('casa');
+          renderOrigin();
+        }
+      });
+
+      // -------------------------------------------------------------------
+      // Bespoke garment modal
       // -------------------------------------------------------------------
       $('custom-store').innerHTML = BOUTIQUES.map((k) => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
 
       const modal = $('custom-modal');
+      let modalOpener = null;
       const openModal = (open) => {
-        modal.classList.toggle('hidden', !open);
-        modal.classList.toggle('flex', open);
+        if (open) modalOpener = document.activeElement;
+        show(modal, open);
         if (open) $('custom-name').focus();
+        else if (modalOpener) modalOpener.focus();
       };
       $('btn-open-custom').addEventListener('click', () => openModal(true));
       $('btn-close-custom').addEventListener('click', () => openModal(false));
       $('btn-cancel-custom').addEventListener('click', () => openModal(false));
       modal.addEventListener('click', (e) => { if (e.target === modal) openModal(false); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openModal(false); });
 
       $('custom-form').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -1236,7 +1482,7 @@
         if (!name || !(price > 0)) return;
         items.push({
           id: `custom-${Date.now()}`, name, price, store: $('custom-store').value,
-          icon: '✨', styles: [], quantity: 1, checked: true, isCustom: true,
+          kind: 'Bespoke', styles: [], quantity: 1, checked: true, isCustom: true,
         });
         e.target.reset();
         openModal(false);
@@ -1246,11 +1492,11 @@
       });
 
       // -------------------------------------------------------------------
-      // Try-on: his photo + ticked garments -> Gemini -> (optional) Tripo 3D -> Blender
+      // Try-on: his photo + ticked garments -> image model -> (optional) Tripo 3D -> Blender
       // -------------------------------------------------------------------
       const API_BASE = 'http://localhost:8001'; // camera-to-blender relay server
       // `run` lets a closed or restarted try-on ignore late replies
-      const tryon = { run: 0, blob: null, modelUrl: null, streams: [] };
+      const tryon = { run: 0, blob: null, modelUrl: null, streams: [], opener: null };
       const tryonModal = $('tryon-modal');
 
       async function apiError(res, fallback) {
@@ -1260,13 +1506,13 @@
 
       function setTryonStatus(msg, isError = false) {
         $('tryon-status').textContent = msg;
-        $('tryon-status').className = `mt-4 text-sm ${isError ? 'text-crimson-300' : 'text-stone-300'}`;
+        $('tryon-status').classList.toggle('is-error', isError);
       }
 
       function setTryonView(view) { // 'loading' | 'image' | '3d' | 'empty'
-        $('tryon-loading').classList.toggle('hidden', view !== 'loading');
-        $('tryon-after').classList.toggle('hidden', view !== 'image');
-        $('tryon-3d').classList.toggle('hidden', view !== '3d');
+        show('tryon-loading', view === 'loading');
+        show('tryon-after', view === 'image');
+        show('tryon-3d', view === '3d');
       }
 
       function stopTryonStreams() {
@@ -1277,15 +1523,15 @@
       function closeTryOn() {
         tryon.run++;
         stopTryonStreams();
-        tryonModal.classList.add('hidden');
-        tryonModal.classList.remove('flex');
+        show(tryonModal, false);
+        if (tryon.opener) tryon.opener.focus();
       }
 
       async function runTryOn() {
         const picked = items.filter((i) => i.checked);
         if (!state.photo) {
-          showToast('Add his front photo in Step 1 first.', 'warning');
-          $('step-photo').scrollIntoView({ behavior: 'smooth' });
+          showToast('Add his front photo in Chapter I first.', 'warning');
+          $('reflection').scrollIntoView({ behavior: 'smooth' });
           return;
         }
         if (!picked.length) {
@@ -1294,18 +1540,20 @@
         }
 
         const run = ++tryon.run;
+        if (tryonModal.classList.contains('hidden')) tryon.opener = document.activeElement;
         stopTryonStreams();
         tryon.blob = null;
         tryon.modelUrl = null;
-        tryonModal.classList.remove('hidden');
-        tryonModal.classList.add('flex');
+        show(tryonModal, true);
+        $('btn-close-tryon').focus();
         $('tryon-before').src = state.photo.src;
         $('tryon-garments').innerHTML = picked
-          .map((i) => `<span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-crimson-900/60 text-gold-200 border border-gold-400/30">${i.icon} ${esc(i.name)}</span>`)
+          .map((i) => `<span class="chip">${esc(i.name)}${i.quantity > 1 ? ` ×${i.quantity}` : ''}</span>`)
           .join('');
+        $('tryon-after-note').textContent = `Wearing ${plural(picked.length, 'piece')}`;
         $('btn-tryon-again').disabled = true;
         $('btn-tryon-3d').disabled = true;
-        $('btn-tryon-blender').classList.add('hidden');
+        show('btn-tryon-blender', false);
         setTryonView('loading');
         setTryonStatus('Dressing him in the chosen garments. This can take up to a minute.');
 
@@ -1338,7 +1586,7 @@
         }
       }
 
-      // Tripo expects PNG; Gemini may hand back JPEG
+      // Tripo expects PNG; the image model may hand back JPEG
       async function toPng(blob) {
         if (blob.type === 'image/png') return blob;
         const bitmap = await createImageBitmap(blob);
@@ -1365,11 +1613,11 @@
           if (run !== tryon.run) return;
 
           // Show the untextured preview as soon as it lands, then swap in the textured model
-          const show = (url, final) => {
+          const showModel = (url, final) => {
             tryon.modelUrl = url;
             $('tryon-3d').setAttribute('src', `${API_BASE}/proxy-model?url=${encodeURIComponent(url)}`);
             setTryonView('3d');
-            $('btn-tryon-blender').classList.remove('hidden');
+            show('btn-tryon-blender', true);
             $('btn-tryon-again').disabled = false;
             setTryonStatus(final ? 'Textured 3D model ready. Drag to turn him around.' : 'Shape ready, adding fabric textures...');
           };
@@ -1382,7 +1630,7 @@
             });
             es.addEventListener('complete', (e) => {
               es.close();
-              if (final || !tryon.modelUrl) show(JSON.parse(e.data).model_url, final);
+              if (final || !tryon.modelUrl) showModel(JSON.parse(e.data).model_url, final);
             });
             es.addEventListener('error', (e) => {
               es.close();
@@ -1436,7 +1684,7 @@
           });
           if (res.status === 404) throw new Error('Blender is not connected. Open the WS Import tab and connect.');
           if (!res.ok) throw await apiError(res, 'Could not reach Blender');
-          showToast(`Sent ${picked.length} garment(s) to Blender`);
+          showToast(`Sent ${plural(picked.length, 'garment')} to Blender`);
         } catch (err) {
           showToast(err instanceof TypeError ? `Start camera-to-blender at ${API_BASE} first.` : err.message, 'warning');
         }
@@ -1444,66 +1692,17 @@
 
       $('btn-dress-blender').addEventListener('click', dressInBlender);
       $('btn-tryon').addEventListener('click', runTryOn);
+      $('btn-tryon-mobile').addEventListener('click', runTryOn);
       $('btn-tryon-again').addEventListener('click', runTryOn);
       $('btn-tryon-3d').addEventListener('click', makeTryOn3D);
       $('btn-tryon-blender').addEventListener('click', sendTryOnToBlender);
       $('btn-close-tryon').addEventListener('click', closeTryOn);
       tryonModal.addEventListener('click', (e) => { if (e.target === tryonModal) closeTryOn(); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !tryonModal.classList.contains('hidden')) closeTryOn(); });
 
-      // -------------------------------------------------------------------
-      // Ambient bats
-      // -------------------------------------------------------------------
-      let batsOn = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      function initBats() {
-        const canvas = $('bat-canvas');
-        const ctx = canvas.getContext('2d');
-        const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; };
-        resize();
-        addEventListener('resize', resize);
-
-        const bats = Array.from({ length: 14 }, () => ({
-          x: Math.random() * innerWidth,
-          y: Math.random() * innerHeight,
-          vx: (Math.random() - 0.5) * 1.5,
-          vy: (Math.random() - 0.5) * 1.0,
-          size: 14 + Math.random() * 12,
-          phase: Math.random() * Math.PI * 2,
-        }));
-
-        (function frame() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          if (batsOn) {
-            ctx.fillStyle = 'rgba(158, 28, 35, 0.25)';
-            bats.forEach((b) => {
-              b.x += b.vx; b.y += b.vy; b.phase += 0.15;
-              if (b.x < -30) b.x = canvas.width + 30;
-              if (b.x > canvas.width + 30) b.x = -30;
-              if (b.y < -30) b.y = canvas.height + 30;
-              if (b.y > canvas.height + 30) b.y = -30;
-              const flap = Math.sin(b.phase) * 6;
-              ctx.save();
-              ctx.translate(b.x, b.y);
-              ctx.beginPath();
-              ctx.moveTo(0, 0);
-              ctx.quadraticCurveTo(-b.size / 2, -b.size / 2 + flap, -b.size, 0);
-              ctx.quadraticCurveTo(-b.size / 2, b.size / 3, 0, 0);
-              ctx.quadraticCurveTo(b.size / 2, -b.size / 2 + flap, b.size, 0);
-              ctx.quadraticCurveTo(b.size / 2, b.size / 3, 0, 0);
-              ctx.fill();
-              ctx.restore();
-            });
-          }
-          requestAnimationFrame(frame);
-        })();
-      }
-
-      $('btn-bats').setAttribute('aria-pressed', batsOn);
-      $('btn-bats').addEventListener('click', (e) => {
-        batsOn = !batsOn;
-        e.currentTarget.setAttribute('aria-pressed', batsOn);
-        showToast(`Bats ${batsOn ? 'on' : 'off'}`, 'info');
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!tryonModal.classList.contains('hidden')) closeTryOn();
+        else if (!modal.classList.contains('hidden')) openModal(false);
       });
 
       // -------------------------------------------------------------------
@@ -1525,7 +1724,15 @@
       renderFilterTabs();
       initMap();
       applyRecommendations();
-      initBats();
+
+      // Start from "my location" again if they chose it before and the browser still allows it
+      try {
+        if (localStorage.getItem(ORIGIN_KEY) === 'me' && navigator.permissions) {
+          navigator.permissions.query({ name: 'geolocation' })
+            .then((p) => { if (p.state === 'granted') useMyLocation({ quiet: true }); })
+            .catch(() => {});
+        }
+      } catch (err) { /* storage unavailable: start from Casa Loma */ }
     })();
   </script>
 </body>
